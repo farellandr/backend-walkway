@@ -1,8 +1,10 @@
+import { User } from '#/users/entities/user.entity';
 import {
   Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -12,7 +14,7 @@ export class Role {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column({ unique: true })
   role: string;
 
   @CreateDateColumn({
@@ -32,4 +34,7 @@ export class Role {
     nullable: false,
   })
   deletedAt: Date;
+
+  @OneToMany(() => User, (user) => user.role)
+  users: User[];
 }

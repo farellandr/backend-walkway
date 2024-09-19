@@ -7,6 +7,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class RoleService {
+  findOneOrFail(arg0: { where: { id: string } }) {
+    throw new Error('Method not implemented.');
+  }
+
   constructor(
     @InjectRepository(Role)
     private roleRepository: Repository<Role>,

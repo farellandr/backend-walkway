@@ -4,22 +4,39 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { EntityNotFoundError, Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { RoleService } from '#/role/role.service';
+import { hash, genSalt } from 'bcrypt';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    private roleService: RoleService,
   ) {}
 
   async create(createUserDto: CreateUserDto) {
-    const result = await this.usersRepository.insert(createUserDto);
+    try {
+      // Generate salt & hash password
+      const salt = await genSalt(10);
+      const hashedPass = await hash(createUserDto.password, salt);
 
-    return this.usersRepository.findOneOrFail({
-      where: {
-        id: result.identifiers[0].id,
-      },
-    });
+      // Menyediakan apa saja yang akan di masukan kedalam database
+      const user = {
+        ...createUserDto,
+        password: hashedPass,
+        salt,
+      };
+
+      // Memasukan ke dalam database
+      const result = await this.usersRepository.insert(user);
+
+      return this.usersRepository.findOneOrFail({
+        where: { id: result.identifiers[0].id },
+      });
+    } catch (error) {
+      throw error;
+    }
   }
 
   findAll() {
@@ -99,6 +116,6 @@ export class UsersService {
       }
     }
 
-    await this.usersRepository.delete(id);
+    await this.usersRepository.softDelete(id);
   }
 }
