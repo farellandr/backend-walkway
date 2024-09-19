@@ -14,7 +14,7 @@ export class DataBrandService {
     ){}
 
     async create(createBrand: CreateBrandDto){
-        const tabBrand = new Brand
+        const tabBrand = new Brand()
         tabBrand.BrandName= createBrand.BrandName
         tabBrand.status= createBrand.status
         tabBrand.Brand_image= createBrand.foto
@@ -52,6 +52,13 @@ export class DataBrandService {
             HttpStatus.NOT_FOUND
           )
         }
+    }
+
+    async getbyId(id: string){
+        const brand= await this.BrandRepository.findOneOrFail({
+            where:{id}
+        })
+        return brand
     }
     
 

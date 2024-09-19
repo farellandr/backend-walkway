@@ -1,10 +1,11 @@
+import { Product } from "#/product/entities/product.entity";
 import {
   Entity,
   Column,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
   DeleteDateColumn,
-  VersionColumn,
+  OneToMany,
   CreateDateColumn,
 } from 'typeorm';
 
@@ -17,6 +18,9 @@ export enum SelectStatus {
 export class Brand {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @OneToMany(() => Product, (Product) => Product.brand)
+  Product: Product;
 
   @Column()
   BrandName: string;

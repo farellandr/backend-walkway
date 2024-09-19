@@ -10,6 +10,7 @@ import configuration from './config/configuration';
 import * as pino from 'pino';
 import { SeederModule } from '#/seeder/seeder.module';
 import { DataBrandModule } from './data-brand/data-brand.module';
+import { ProductModule } from './product/product.module';
 @Module({
   imports: [
     LoggerModule.forRoot({
@@ -97,6 +98,7 @@ import { DataBrandModule } from './data-brand/data-brand.module';
     UsersModule,
     HealthModule,
     DataBrandModule,
+    ProductModule,
   ],
 })
 export class AppModule {}
