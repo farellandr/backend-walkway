@@ -1,13 +1,16 @@
-import { Product } from "#/products/entities/product.entity";
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, ManyToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Category } from "#/categories/entities/category.entity";
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 @Entity()
-export class Category {
+export class Product {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
     @Column()
-    categoryName: string;
+    name: string;
+
+    @Column()
+    price: number;
 
     @CreateDateColumn({
         type: 'timestamp with time zone',
@@ -27,6 +30,9 @@ export class Category {
     })
     deletedAt: Date;
 
-    @ManyToMany(() => Product, (product) => product.categories)
-    products: Product[];
+    @ManyToMany(() => Category, (category) => category.products)
+    @JoinTable({
+        name: 'product_categories'
+    })
+    categories: Category[];
 }
