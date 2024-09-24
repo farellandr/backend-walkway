@@ -10,6 +10,8 @@ import configuration from './config/configuration';
 import * as pino from 'pino';
 import { SeederModule } from '#/seeder/seeder.module';
 import { RoleModule } from './role/role.module';
+import { AddressModule } from './address/address.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -98,6 +100,8 @@ import { RoleModule } from './role/role.module';
     UsersModule,
     HealthModule,
     RoleModule,
+    AddressModule,
+    AuthModule,
   ],
 })
 export class AppModule {}

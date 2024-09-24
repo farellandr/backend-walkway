@@ -4,7 +4,6 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { EntityNotFoundError, Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { RoleService } from '#/role/role.service';
 import { hash, genSalt } from 'bcrypt';
 
 @Injectable()
@@ -12,11 +11,27 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
-    private roleService: RoleService,
   ) {}
 
   async create(createUserDto: CreateUserDto) {
     try {
+      // Cek apakah email sudah pernah digunakan
+      const cekEmail = await this.usersRepository.findOne({
+        where: {
+          email: createUserDto.email,
+        },
+      });
+
+      if (cekEmail) {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.BAD_REQUEST,
+            error: `Email ${createUserDto.email} already exists. Please try a different one.`,
+          },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
       // Generate salt & hash password
       const salt = await genSalt(10);
       const hashedPass = await hash(createUserDto.password, salt);
@@ -31,6 +46,7 @@ export class UsersService {
       // Memasukan ke dalam database
       const result = await this.usersRepository.insert(user);
 
+      // menampilkan data
       return this.usersRepository.findOneOrFail({
         where: { id: result.identifiers[0].id },
       });

@@ -7,16 +7,34 @@ import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class RoleService {
-  findOneOrFail(arg0: { where: { id: string } }) {
-    throw new Error('Method not implemented.');
-  }
-
   constructor(
     @InjectRepository(Role)
     private roleRepository: Repository<Role>,
   ) {}
 
+  async findByName(roleName: string) {
+    return this.roleRepository.find({
+      where: {
+        role: roleName,
+      },
+    });
+  }
+
   async create(createRoleDto: CreateRoleDto) {
+    const role = await this.roleRepository.findOne({
+      where: { role: createRoleDto.role },
+    });
+
+    if (role) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: `Role ${createRoleDto.role} already exists`,
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
     const newRole = await this.roleRepository.insert(createRoleDto);
 
     return this.roleRepository.findOneOrFail({

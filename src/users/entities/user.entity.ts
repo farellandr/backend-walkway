@@ -1,3 +1,4 @@
+import { Address } from '#/address/entities/address.entity';
 import { Role } from '#/role/entities/role.entity';
 import {
   Entity,
@@ -8,6 +9,7 @@ import {
   // VersionColumn,n
   CreateDateColumn,
   ManyToOne,
+  OneToMany,
 } from 'typeorm';
 
 @Entity()
@@ -18,7 +20,7 @@ export class User {
   @Column()
   name: string;
 
-  @Column()
+  @Column({ unique: true })
   email: string;
 
   @Column()
@@ -54,8 +56,10 @@ export class User {
   // @VersionColumn()
   // version: number;
 
-  @Column()
-  roleId: string;
+  @Column({
+    default: 'user',
+  })
+  roleName: string;
 
   @ManyToOne(
     () => {
@@ -66,4 +70,14 @@ export class User {
     },
   )
   role: Role;
+
+  @OneToMany(
+    () => {
+      return Address;
+    },
+    (address) => {
+      return address.user;
+    },
+  )
+  address: Address[];
 }
