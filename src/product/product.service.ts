@@ -58,7 +58,7 @@ export class ProductService {
         } catch (error) {
             throw error;
         }
-
+        
         await this.productRepository.update(id, upProduct);
         return this.productRepository.findOneOrFail({
             where:{id,},

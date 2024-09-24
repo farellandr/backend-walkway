@@ -11,6 +11,8 @@ import * as pino from 'pino';
 import { SeederModule } from '#/seeder/seeder.module';
 import { DataBrandModule } from './data-brand/data-brand.module';
 import { ProductModule } from './product/product.module';
+import { PaymentModule } from './payment/payment.module';
+import { BidProductModule } from './bid-product/bid-product.module';
 @Module({
   imports: [
     LoggerModule.forRoot({
@@ -99,6 +101,8 @@ import { ProductModule } from './product/product.module';
     HealthModule,
     DataBrandModule,
     ProductModule,
+    PaymentModule,
+    BidProductModule,
   ],
 })
 export class AppModule {}

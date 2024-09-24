@@ -12,7 +12,7 @@ import {
   } from '@nestjs/common';
 import { ProductService } from "./product.service";
 import { CreateProductDto } from "./dto/create.product.dto";
-import { upDataBrand } from '#/data-brand/dto/updateDataBrand.dto';
+// import { upDataBrand } from '#/data-brand/dto/updateDataBrand.dto';
 import { UpProduct } from './dto/update.product.dto';
 
 @Controller('product')

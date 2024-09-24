@@ -6,7 +6,7 @@ import { Brand } from "./entities/brand.entity";
 import { ProductModule } from "#/product/product.module";
 
 @Module({
-  imports:[TypeOrmModule.forFeature([Brand]),forwardRef(() => ProductModule),],
+  imports:[TypeOrmModule.forFeature([Brand]), forwardRef(() => ProductModule),],
   controllers: [DataBrandController],
   providers: [DataBrandService]
 })

@@ -1,7 +1,4 @@
-import { Brand } from "#/data-brand/entities/brand.entity";
-import { BidProduct } from "#/bid-product/entities/bid-product.entity";
 import {
-  BaseEntity,
   Entity,
   Column,
   PrimaryGeneratedColumn,
@@ -9,27 +6,30 @@ import {
   DeleteDateColumn,
   CreateDateColumn,
   ManyToOne,
-  OneToMany,
 } from 'typeorm';
+import { User } from "#/users/entities/user.entity";
 
 @Entity()
-export class Product extends BaseEntity {
+export class Payment {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => Brand, (brand) => brand.Product)
-  brand: Brand;
+  @ManyToOne(() => User, (user) => user.payment )
+  user: User;
   @Column()
-  brand_id: string;
-
-  @OneToMany(() => BidProduct, (bid) => bid.product)
-  bid: BidProduct;
+  user_id: string;
 
   @Column()
-  nameProduct: string;
+  payment_method: string;
+
+  @Column()
+  payment_total: string;
+
+  @Column()
+  status: string;
 
   @Column('int')
-  price: number;
+  va_number: number;
 
   @CreateDateColumn({
     type: 'timestamp with time zone',

@@ -1,5 +1,4 @@
-import { Brand } from "#/data-brand/entities/brand.entity";
-import { BidProduct } from "#/bid-product/entities/bid-product.entity";
+import { Product } from '#/product/entities/product.entity';
 import {
   BaseEntity,
   Entity,
@@ -9,27 +8,26 @@ import {
   DeleteDateColumn,
   CreateDateColumn,
   ManyToOne,
-  OneToMany,
 } from 'typeorm';
 
 @Entity()
-export class Product extends BaseEntity {
+export class BidProduct extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => Brand, (brand) => brand.Product)
-  brand: Brand;
+  @ManyToOne(() => Product, (product) => product.bid)
+  product: Product[];
   @Column()
-  brand_id: string;
+  product_id: string;
 
-  @OneToMany(() => BidProduct, (bid) => bid.product)
-  bid: BidProduct;
+  @Column({ type: 'timestamp' })
+  StartDate: Date;
 
-  @Column()
-  nameProduct: string;
+  @Column({ type: 'timestamp' })
+  EndDate: Date;
 
   @Column('int')
-  price: number;
+  StartPrice: number;
 
   @CreateDateColumn({
     type: 'timestamp with time zone',
