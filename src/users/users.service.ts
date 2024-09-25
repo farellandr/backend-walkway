@@ -5,16 +5,31 @@ import { EntityNotFoundError, Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { hash, genSalt } from 'bcrypt';
+import { RoleService } from '#/role/role.service';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    private roleService: RoleService,
   ) {}
 
   async create(createUserDto: CreateUserDto) {
     try {
+      // cek apakah role ada didalam roleRepository
+      const role = await this.roleService.findByName(createUserDto.roleName);
+
+      if (!role) {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.BAD_REQUEST,
+            error: 'The requested role is not available',
+          },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
       // Cek apakah email sudah pernah digunakan
       const cekEmail = await this.usersRepository.findOne({
         where: {

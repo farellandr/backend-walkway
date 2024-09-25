@@ -1,4 +1,5 @@
 import { Address } from '#/address/entities/address.entity';
+import { Cart } from '#/cart/entities/cart.entity';
 import { Role } from '#/role/entities/role.entity';
 import {
   Entity,
@@ -10,6 +11,7 @@ import {
   CreateDateColumn,
   ManyToOne,
   OneToMany,
+  OneToOne,
 } from 'typeorm';
 
 @Entity()
@@ -61,6 +63,7 @@ export class User {
   })
   roleName: string;
 
+  // Realasi dengan table role
   @ManyToOne(
     () => {
       return Role;
@@ -71,6 +74,7 @@ export class User {
   )
   role: Role;
 
+  // Realasi dengan table address
   @OneToMany(
     () => {
       return Address;
@@ -80,4 +84,8 @@ export class User {
     },
   )
   address: Address[];
+
+  // Realsi dengan table cart (menyimpan FK-User)
+  @OneToOne(() => Cart, (cart) => cart.user)
+  cart: Cart;
 }

@@ -12,8 +12,8 @@ export class RoleService {
     private roleRepository: Repository<Role>,
   ) {}
 
-  async findByName(roleName: string) {
-    return this.roleRepository.find({
+  findByName(roleName: string) {
+    return this.roleRepository.findOne({
       where: {
         role: roleName,
       },
@@ -21,27 +21,33 @@ export class RoleService {
   }
 
   async create(createRoleDto: CreateRoleDto) {
-    const role = await this.roleRepository.findOne({
-      where: { role: createRoleDto.role },
-    });
+    try {
+      // validasi jika role sudah ada, maka tidak dapat buat lagi
+      const role = await this.roleRepository.findOne({
+        where: { role: createRoleDto.role },
+      });
 
-    if (role) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.BAD_REQUEST,
-          message: `Role ${createRoleDto.role} already exists`,
+      if (role) {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.BAD_REQUEST,
+            message: `Role ${createRoleDto.role} already exists`,
+          },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      // pembuatan role
+      const newRole = await this.roleRepository.insert(createRoleDto);
+
+      return this.roleRepository.findOneOrFail({
+        where: {
+          id: newRole.identifiers[0].id,
         },
-        HttpStatus.BAD_REQUEST,
-      );
+      });
+    } catch (err) {
+      throw err;
     }
-
-    const newRole = await this.roleRepository.insert(createRoleDto);
-
-    return this.roleRepository.findOneOrFail({
-      where: {
-        id: newRole.identifiers[0].id,
-      },
-    });
   }
 
   findAll() {
