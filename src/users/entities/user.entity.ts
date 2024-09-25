@@ -1,5 +1,7 @@
 import { Role } from '#/role/entities/role.entity';
 import { Payment } from "#/payment/entities/payment.entity";
+import { Address } from '#/address/entities/address.entity';
+import { Role } from '#/role/entities/role.entity';
 import {
   Entity,
   Column,
@@ -20,7 +22,7 @@ export class User {
   @Column()
   name: string;
 
-  @Column()
+  @Column({ unique: true })
   email: string;
 
   @Column()
@@ -56,8 +58,10 @@ export class User {
   // @VersionColumn()
   // version: number;
 
-  @Column()
-  roleId: string;
+  @Column({
+    default: 'user',
+  })
+  roleName: string;
 
   @ManyToOne(
     () => {
@@ -68,7 +72,14 @@ export class User {
     },
   )
   role: Role;
-  
-  @OneToMany(() => Payment, (payment) => payment.user )
-  payment: Payment;
+
+  @OneToMany(
+    () => {
+      return Address;
+    },
+    (address) => {
+      return address.user;
+    },
+  )
+  address: Address[];
 }

@@ -15,7 +15,10 @@ import { ProductDetailsModule } from './product_details/product_details.module';
 import { DataBrandModule } from './data-brand/data-brand.module';
 import { ProductModule } from './product/product.module';
 import { PaymentModule } from './payment/payment.module';
-import { BidProductModule } from './bid-product/bid-product.module';
+import { BidProductModule } from './bid-product/bid-product.module';import { RoleModule } from './role/role.module';
+import { AddressModule } from './address/address.module';
+import { AuthModule } from './auth/auth.module';
+
 @Module({
   imports: [
     LoggerModule.forRoot({
@@ -109,6 +112,9 @@ import { BidProductModule } from './bid-product/bid-product.module';
     ProductModule,
     PaymentModule,
     BidProductModule,
+    RoleModule,
+    AddressModule,
+    AuthModule,
   ],
 })
 export class AppModule {}

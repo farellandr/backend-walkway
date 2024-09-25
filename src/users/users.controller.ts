@@ -22,7 +22,7 @@ export class UsersController {
     return {
       data: await this.usersService.create(createUserDto),
       statusCode: HttpStatus.CREATED,
-      message: 'success',
+      message: 'Success',
     };
   }
 
