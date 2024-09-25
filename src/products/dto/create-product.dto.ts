@@ -1,3 +1,4 @@
+import { CreateProductDetailDto } from "#/product_details/dto/create-product_detail.dto";
 import { IsNotEmpty, IsOptional } from "class-validator";
 
 export class CreateProductDto {
@@ -9,4 +10,7 @@ export class CreateProductDto {
 
     @IsOptional()
     categoryIds?: string[];
+
+    @IsOptional()
+    details?: CreateProductDetailDto[];
 }

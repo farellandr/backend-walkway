@@ -1,5 +1,6 @@
 import { Category } from "#/categories/entities/category.entity";
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { ProductDetail } from "#/product_details/entities/product_detail.entity";
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 @Entity()
 export class Product {
@@ -35,4 +36,7 @@ export class Product {
         name: 'product_categories'
     })
     categories: Category[];
+
+    @OneToMany(() => ProductDetail, (productDetails) => productDetails.product)
+    productDetails: ProductDetail[]
 }
