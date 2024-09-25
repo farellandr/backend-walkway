@@ -12,7 +12,10 @@ import { SeederModule } from '#/seeder/seeder.module';
 import { CategoriesModule } from './categories/categories.module';
 import { ProductsModule } from './products/products.module';
 import { ProductDetailsModule } from './product_details/product_details.module';
-
+import { DataBrandModule } from './data-brand/data-brand.module';
+import { ProductModule } from './product/product.module';
+import { PaymentModule } from './payment/payment.module';
+import { BidProductModule } from './bid-product/bid-product.module';
 @Module({
   imports: [
     LoggerModule.forRoot({
@@ -102,6 +105,10 @@ import { ProductDetailsModule } from './product_details/product_details.module';
     CategoriesModule,
     ProductsModule,
     ProductDetailsModule,
+    DataBrandModule,
+    ProductModule,
+    PaymentModule,
+    BidProductModule,
   ],
 })
 export class AppModule {}
