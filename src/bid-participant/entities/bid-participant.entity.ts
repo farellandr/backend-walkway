@@ -1,5 +1,5 @@
-import { Product } from '#/product/entities/product.entity';
-import { BidParticipant } from "#/bid-participant/entities/bid-participant.entity";
+import { BidProduct } from "#/bid-product/entities/bid-product.entity";
+import { Payment } from "#/payment/entities/payment.entity";
 import {
   BaseEntity,
   Entity,
@@ -9,30 +9,28 @@ import {
   DeleteDateColumn,
   CreateDateColumn,
   ManyToOne,
-  OneToMany,
+  OneToOne,
+  JoinColumn,
 } from 'typeorm';
 
 @Entity()
-export class BidProduct extends BaseEntity {
+export class BidParticipant {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => Product, (product) => product.bid)
-  product: Product[];
+  @ManyToOne(() => BidProduct, (bidProduct) => bidProduct.bidUser)
+  bidProduct: BidProduct[]
   @Column()
-  product_id: string;
-  
-  @OneToMany(() => BidParticipant, (bidUser) => bidUser.bidProduct)
-  bidUser: BidParticipant[];
+  bidProduct_id: string;
 
-  @Column({ type: 'timestamp' })
-  StartDate: Date;
-
-  @Column({ type: 'timestamp' })
-  EndDate: Date;
+  @OneToOne(() => Payment)
+  @JoinColumn()
+  payment: Payment;
+  @Column()
+  payment_id: string;
 
   @Column('int')
-  StartPrice: number;
+  amount:number;
 
   @CreateDateColumn({
     type: 'timestamp with time zone',

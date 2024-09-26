@@ -13,6 +13,7 @@ import { DataBrandModule } from './data-brand/data-brand.module';
 import { ProductModule } from './product/product.module';
 import { PaymentModule } from './payment/payment.module';
 import { BidProductModule } from './bid-product/bid-product.module';
+import { BidParticipantModule } from './bid-participant/bid-participant.module';
 @Module({
   imports: [
     LoggerModule.forRoot({
@@ -103,6 +104,7 @@ import { BidProductModule } from './bid-product/bid-product.module';
     ProductModule,
     PaymentModule,
     BidProductModule,
+    BidParticipantModule,
   ],
 })
 export class AppModule {}
