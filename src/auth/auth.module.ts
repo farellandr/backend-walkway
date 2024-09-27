@@ -2,10 +2,10 @@ import { Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from '#/users/entities/user.entity';
-import { RoleModule } from '#/role/role.module';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
+import { User } from '#/modules/users/entities/user.entity';
+import { RolesModule } from '#/modules/roles/roles.module';
 
 @Module({
   imports: [
@@ -18,7 +18,7 @@ import { JwtModule } from '@nestjs/jwt';
       },
     }),
     TypeOrmModule.forFeature([User]),
-    RoleModule,
+    RolesModule,
   ],
   controllers: [AuthController],
   providers: [AuthService],

@@ -1,4 +1,4 @@
-import { User } from '#/users/entities/user.entity';
+import { User } from '#/modules/users/entities/user.entity';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -17,11 +17,11 @@ export class Jwtstrategies extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(playload) {
+  async validate(payload) {
     try {
       const user = await this.userRepository.findOne({
         where: {
-          id: playload.id,
+          id: payload.id,
         },
       });
 

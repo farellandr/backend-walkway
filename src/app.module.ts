@@ -2,22 +2,22 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as Joi from 'joi';
-import { UsersModule } from './users/users.module';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { LoggerModule } from 'nestjs-pino';
 import { HealthModule } from './health/health.module';
 import configuration from './config/configuration';
 import * as pino from 'pino';
 import { SeederModule } from '#/seeder/seeder.module';
-import { CategoriesModule } from './categories/categories.module';
-import { ProductsModule } from './products/products.module';
-import { ProductDetailsModule } from './product_details/product_details.module';
-import { DataBrandModule } from './data-brand/data-brand.module';
-import { ProductModule } from './product/product.module';
-import { PaymentModule } from './payment/payment.module';
-import { BidProductModule } from './bid-product/bid-product.module';import { RoleModule } from './role/role.module';
-import { AddressModule } from './address/address.module';
 import { AuthModule } from './auth/auth.module';
+import { ProductsModule } from './modules/products/products.module';
+import { BrandsModule } from './modules/brands/brands.module';
+import { CategoriesModule } from './modules/categories/categories.module';
+import { ProductDetailsModule } from './modules/product-details/product-details.module';
+import { UsersModule } from './modules/users/users.module';
+import { RolesModule } from './modules/roles/roles.module';
+import { AddressesModule } from './modules/addresses/addresses.module';
+import { BidProductsModule } from './modules/bid-products/bid-products.module';
+import { PaymentsModule } from './modules/payments/payments.module';
 
 @Module({
   imports: [
@@ -103,18 +103,17 @@ import { AuthModule } from './auth/auth.module';
       inject: [ConfigService],
     }),
     SeederModule,
-    UsersModule,
     HealthModule,
     CategoriesModule,
     ProductsModule,
-    ProductDetailsModule,
-    DataBrandModule,
-    ProductModule,
-    PaymentModule,
-    BidProductModule,
-    RoleModule,
-    AddressModule,
     AuthModule,
+    BrandsModule,
+    ProductDetailsModule,
+    UsersModule,
+    RolesModule,
+    AddressesModule,
+    BidProductsModule,
+    PaymentsModule,
   ],
 })
 export class AppModule {}
