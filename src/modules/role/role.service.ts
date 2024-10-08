@@ -1,23 +1,23 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { CreateBrandDto } from './dto/create-brand.dto';
-import { UpdateBrandDto } from './dto/update-brand.dto';
+import { CreateRoleDto } from './dto/create-role.dto';
+import { UpdateRoleDto } from './dto/update-role.dto';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Role } from './entities/role.entity';
 import { EntityNotFoundError, QueryFailedError, Repository } from 'typeorm';
-import { Brand } from './entities/brand.entity';
 import { cleanErrorMessage } from '#/utils/helpers/clean-error-message';
 
 @Injectable()
-export class BrandService {
+export class RoleService {
   constructor(
-    @InjectRepository(Brand)
-    private readonly brandRepository: Repository<Brand>
-  ) { }
+    @InjectRepository(Role)
+    private readonly roleRepository: Repository<Role>
+  ) {}
 
-  async create(createBrandDto: CreateBrandDto) {
+  async create(createRoleDto: CreateRoleDto) {
     try {
-      const result = await this.brandRepository.insert(createBrandDto);
+      const result = await this.roleRepository.insert(createRoleDto);
 
-      return await this.brandRepository.findOneOrFail({
+      return await this.roleRepository.findOneOrFail({
         where: {
           id: result.identifiers[0].id
         }
@@ -47,7 +47,7 @@ export class BrandService {
 
   async findAll(page: number = 1, limit: number = 10) {
     try {
-      return await this.brandRepository.findAndCount({
+      return await this.roleRepository.findAndCount({
         skip: (page - 1) * limit,
         take: limit
       })
@@ -77,7 +77,7 @@ export class BrandService {
 
   async findOne(id: string) {
     try {
-      return await this.brandRepository.findOneOrFail({
+      return await this.roleRepository.findOneOrFail({
         where: { id }
       });
     } catch (error) {
@@ -103,14 +103,14 @@ export class BrandService {
     }
   }
 
-  async update(id: string, updateBrandDto: UpdateBrandDto) {
+  async update(id: string, updateRoleDto: UpdateRoleDto) {
     try {
-      await this.brandRepository.findOneOrFail({
+      await this.roleRepository.findOneOrFail({
         where: { id },
       });
 
-      await this.brandRepository.update(id, updateBrandDto);
-      return await this.brandRepository.findOneOrFail({
+      await this.roleRepository.update(id, updateRoleDto);
+      return await this.roleRepository.findOneOrFail({
         where: { id },
       });
     } catch (error) {
@@ -148,11 +148,11 @@ export class BrandService {
 
   async remove(id: string) {
     try {
-      await this.brandRepository.findOneOrFail({
+      await this.roleRepository.findOneOrFail({
         where: { id },
       });
 
-      await this.brandRepository.softDelete(id);
+      await this.roleRepository.softDelete(id);
     } catch (error) {
       if (error instanceof EntityNotFoundError) {
         throw new HttpException(

@@ -3,7 +3,7 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Logger } from 'nestjs-pino';
-import { CorrelationIdMiddleware } from './utils/correlation-id.middleware';
+import { CorrelationIdMiddleware } from './utils/middlewares/correlation-id.middleware';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 

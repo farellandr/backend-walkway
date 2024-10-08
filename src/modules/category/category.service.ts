@@ -4,14 +4,7 @@ import { UpdateCategoryDto } from './dto/update-category.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Category } from './entities/category.entity';
 import { EntityNotFoundError, QueryFailedError, Repository } from 'typeorm';
-
-function cleanErrorMessage(message: string): string {
-  return message
-    .replace(/[\n\s]+/g, ' ')
-    .replace(/"where":\s*{[^}]*"id":\s*"([^"]+)"[^}]*}/, 'id: $1')
-    .replace(/\\*"/g, "'")
-    .trim();
-}
+import { cleanErrorMessage } from '#/utils/helpers/clean-error-message';
 
 @Injectable()
 export class CategoryService {

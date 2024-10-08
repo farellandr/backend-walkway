@@ -1,9 +1,9 @@
 import { PartialType } from '@nestjs/swagger';
-import { CreateBrandDto } from './create-brand.dto';
+import { CreateRoleDto } from './create-role.dto';
 import { IsEnum, IsOptional } from 'class-validator';
 import { Status } from '#/utils/enums/status.enum';
 
-export class UpdateBrandDto extends PartialType(CreateBrandDto) {
+export class UpdateRoleDto extends PartialType(CreateRoleDto) {
   @IsOptional()
   @IsEnum(Status)
   status?: Status

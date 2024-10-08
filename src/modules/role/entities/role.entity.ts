@@ -2,15 +2,12 @@ import { Status } from "#/utils/enums/status.enum";
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 @Entity()
-export class Brand {
+export class Role {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column({ type: 'varchar', length: 60 })
   name: string;
-
-  @Column({ type: 'text' })
-  image: string;
 
   @Column({
     type: 'enum',

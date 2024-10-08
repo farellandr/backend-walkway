@@ -1,9 +1,9 @@
-import { Status } from "#/common/enums/status.enum";
+import { Status } from "#/utils/enums/status.enum";
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 @Entity()
 export class Category {
-  @PrimaryGeneratedColumn("uuid")
+  @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column({ type: 'varchar', length: 60 })
