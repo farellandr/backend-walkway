@@ -14,6 +14,7 @@ import { CategoryModule } from './modules/category/category.module';
 import { RoleModule } from './modules/role/role.module';
 import { AddressModule } from './modules/address/address.module';
 import { PaymentModule } from './modules/payment/payment.module';
+import { ProductModule } from './modules/product/product.module';
 
 @Module({
   imports: [
@@ -106,6 +107,7 @@ import { PaymentModule } from './modules/payment/payment.module';
     RoleModule,
     AddressModule,
     PaymentModule,
+    ProductModule,
   ],
 })
 export class AppModule {}
