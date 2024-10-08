@@ -13,6 +13,7 @@ import { BrandModule } from './modules/brand/brand.module';
 import { CategoryModule } from './modules/category/category.module';
 import { RoleModule } from './modules/role/role.module';
 import { AddressModule } from './modules/address/address.module';
+import { PaymentModule } from './modules/payment/payment.module';
 
 @Module({
   imports: [
@@ -104,6 +105,7 @@ import { AddressModule } from './modules/address/address.module';
     CategoryModule,
     RoleModule,
     AddressModule,
+    PaymentModule,
   ],
 })
 export class AppModule {}

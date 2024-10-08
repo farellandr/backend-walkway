@@ -1,34 +1,23 @@
+import { PaymentStatus } from "#/utils/enums/payment-status.enum";
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 @Entity()
-export class Address {
+export class Payment {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column({ type: 'varchar', length: 60 })
-  contact_name: string;
+  payment_method: string;
+
+  @Column({ type: 'int' })
+  payment_total: number;
+  
+  @Column({ type: 'enum', enum: PaymentStatus, default: PaymentStatus.PENDING })
+  status: PaymentStatus;
 
   @Column({ type: 'varchar', length: 60 })
-  contact_number: string;
-
-  @Column({ type: 'varchar', length: 60 })
-  province: string;
-
-  @Column({ type: 'varchar', length: 60 })
-  city: string;
-
-  @Column({ type: 'varchar', length: 60 })
-  district: string;
-
-  @Column({ type: 'varchar', length: 5 })
-  zipcode: string;
-
-  @Column({ type: 'varchar', length: 255 })
-  address: string;
-
-  @Column({ type: 'varchar', length: 60 })
-  note: string;
-
+  va_number: string;
+  
   @CreateDateColumn({
     type: 'timestamp with time zone',
     nullable: false,
