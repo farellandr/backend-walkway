@@ -12,6 +12,7 @@ import { SeederModule } from '#/seeder/seeder.module';
 import { BrandModule } from './modules/brand/brand.module';
 import { CategoryModule } from './modules/category/category.module';
 import { RoleModule } from './modules/role/role.module';
+import { AddressModule } from './modules/address/address.module';
 
 @Module({
   imports: [
@@ -102,6 +103,7 @@ import { RoleModule } from './modules/role/role.module';
     BrandModule,
     CategoryModule,
     RoleModule,
+    AddressModule,
   ],
 })
 export class AppModule {}
