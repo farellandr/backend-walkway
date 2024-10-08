@@ -1,9 +1,9 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { CreateBrandDto } from './dto/create-brand.dto';
-import { UpdateBrandDto } from './dto/update-brand.dto';
+import { CreateCategoryDto } from './dto/create-category.dto';
+import { UpdateCategoryDto } from './dto/update-category.dto';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Category } from './entities/category.entity';
 import { EntityNotFoundError, QueryFailedError, Repository } from 'typeorm';
-import { Brand } from './entities/brand.entity';
 
 function cleanErrorMessage(message: string): string {
   return message
@@ -14,17 +14,17 @@ function cleanErrorMessage(message: string): string {
 }
 
 @Injectable()
-export class BrandService {
+export class CategoryService {
   constructor(
-    @InjectRepository(Brand)
-    private readonly brandRepository: Repository<Brand>
+    @InjectRepository(Category)
+    private readonly categoryrepository: Repository<Category>
   ) { }
 
-  async create(createBrandDto: CreateBrandDto) {
+  async create(createCategoryDto: CreateCategoryDto) {
     try {
-      const result = await this.brandRepository.insert(createBrandDto);
+      const result = await this.categoryrepository.insert(createCategoryDto);
 
-      return await this.brandRepository.findOneOrFail({
+      return await this.categoryrepository.findOneOrFail({
         where: {
           id: result.identifiers[0].id
         }
@@ -54,7 +54,7 @@ export class BrandService {
 
   async findAll(page: number = 1, limit: number = 10) {
     try {
-      return await this.brandRepository.findAndCount({
+      return await this.categoryrepository.findAndCount({
         skip: (page - 1) * limit,
         take: limit
       })
@@ -84,7 +84,7 @@ export class BrandService {
 
   async findOne(id: string) {
     try {
-      return await this.brandRepository.findOneOrFail({
+      return await this.categoryrepository.findOneOrFail({
         where: { id }
       });
     } catch (error) {
@@ -110,14 +110,14 @@ export class BrandService {
     }
   }
 
-  async update(id: string, updateBrandDto: UpdateBrandDto) {
+  async update(id: string, updateCategoryDto: UpdateCategoryDto) {
     try {
-      await this.brandRepository.findOneOrFail({
+      await this.categoryrepository.findOneOrFail({
         where: { id },
       });
 
-      await this.brandRepository.update(id, updateBrandDto);
-      return await this.brandRepository.findOneOrFail({
+      await this.categoryrepository.update(id, updateCategoryDto);
+      return await this.categoryrepository.findOneOrFail({
         where: { id },
       });
     } catch (error) {
@@ -155,11 +155,11 @@ export class BrandService {
 
   async remove(id: string) {
     try {
-      await this.brandRepository.findOneOrFail({
+      await this.categoryrepository.findOneOrFail({
         where: { id },
       });
 
-      await this.brandRepository.softDelete(id);
+      await this.categoryrepository.softDelete(id);
     } catch (error) {
       if (error instanceof EntityNotFoundError) {
         throw new HttpException(
