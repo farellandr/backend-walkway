@@ -1,5 +1,6 @@
+import { Product } from "#/modules/product/entities/product.entity";
 import { Status } from "#/utils/enums/status.enum";
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, ManyToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 @Entity()
 export class Category {
@@ -15,6 +16,9 @@ export class Category {
     default: Status.ACTIVE
   })
   status: Status;
+
+  @ManyToMany(() => Product, (product) => product.categories)
+  products: Product[]
 
   @CreateDateColumn({
     type: 'timestamp with time zone',

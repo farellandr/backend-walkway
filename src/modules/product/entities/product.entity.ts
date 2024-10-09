@@ -1,6 +1,8 @@
 import { Brand } from "#/modules/brand/entities/brand.entity";
 import { Status } from "#/utils/enums/status.enum";
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { ProductDetail } from "./product-detail.entity";
+import { Category } from "#/modules/category/entities/category.entity";
 
 @Entity()
 export class Product {
@@ -20,10 +22,17 @@ export class Product {
   })
   status: Status;
 
-  @OneToMany(() => Brand, (brand) => brand.products)
-  brand: Brand[];
+  @ManyToOne(() => Brand, (brand) => brand.products)
+  brand: Brand;
   @Column({ type: 'uuid' })
   brandId: string;
+
+  @ManyToMany(() => Category, (category) => category.products)
+  @JoinTable({ name: 'product_categories' })
+  categories: Category[]
+
+  @OneToMany(() => ProductDetail, (productDetail) => productDetail.product)
+  productDetails: ProductDetail[];
 
   @CreateDateColumn({
     type: 'timestamp with time zone',

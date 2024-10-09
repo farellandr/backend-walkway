@@ -6,24 +6,47 @@ import { Product } from './entities/product.entity';
 import { EntityNotFoundError, QueryFailedError, Repository } from 'typeorm';
 import { cleanErrorMessage } from '#/utils/helpers/clean-error-message';
 import { BrandService } from '../brand/brand.service';
+import { ProductDetail } from './entities/product-detail.entity';
+import { CategoryService } from '../category/category.service';
 
 @Injectable()
 export class ProductService {
   constructor(
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
+    @InjectRepository(ProductDetail)
+    private readonly productDetailRepository: Repository<ProductDetail>,
     private readonly brandRepository: BrandService,
+    private readonly categoryRepository: CategoryService,
   ) { }
 
   async create(createProductDto: CreateProductDto) {
     try {
-      await Promise.all([this.brandRepository.findOne(createProductDto.brandId)])
+      const [brand, category] = await Promise.all([
+        this.brandRepository.findOne(createProductDto.brandId),
+        this.categoryRepository.findMany(createProductDto.categoryId)
+      ])
 
-      const result = await this.productRepository.insert(createProductDto);
+      const product = new Product;
+      product.name = brand.name + ' ' + createProductDto.name;
+      product.price = createProductDto.price;
+      product.brandId = createProductDto.brandId;
+      product.categories = category;
 
+      const result = await this.productRepository.insert(product);
+      for (const detail of createProductDto.productDetails) {
+        await this.productDetailRepository.insert({ ...detail, productId: result.identifiers[0].id });
+      }
+
+      await this.productRepository.save(product)
       return await this.productRepository.findOneOrFail({
         where: {
           id: result.identifiers[0].id
+        },
+        relations: {
+          brand: true,
+          categories: true,
+          productDetails: true,
         }
       });
     } catch (error) {

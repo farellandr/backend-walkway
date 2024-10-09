@@ -103,6 +103,40 @@ export class CategoryService {
     }
   }
 
+  async findMany(ids: string[]) {
+    try {
+      const categories = await Promise.all(
+        ids.map(async (id) => {
+          return await this.categoryrepository.findOneOrFail({
+            where: { id }
+          });
+        })
+      );
+  
+      return categories;  
+    } catch (error) {
+      if (error instanceof EntityNotFoundError) {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.NOT_FOUND,
+            error: 'Data not found.',
+            message: cleanErrorMessage(error.message),
+          },
+          HttpStatus.NOT_FOUND,
+        );
+      } else {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+            error: 'Internal server error.',
+            message: error.message,
+          },
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+    }
+  }
+
   async update(id: string, updateCategoryDto: UpdateCategoryDto) {
     try {
       await this.categoryrepository.findOneOrFail({

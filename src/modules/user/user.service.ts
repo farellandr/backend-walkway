@@ -27,7 +27,7 @@ export class UserService {
       user.phone_number = createUserDto.phone_number;
 
       await this.roleRepository.findOne(createUserDto.roleId)
-      user.roleId = createUserDto.roleId
+      user.roleId = createUserDto.roleId;
 
       const isEmailExist = await this.userRepository.findOne({
         where: {

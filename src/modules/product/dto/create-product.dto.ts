@@ -1,4 +1,6 @@
-import { IsNotEmpty, IsNumber, IsString, IsUUID } from "class-validator";
+import { IsArray, IsNotEmpty, IsNumber, IsString, IsUUID, ValidateNested } from "class-validator";
+import { CreateProductDetailDto } from "./create-product-detail.dto";
+import { Type } from "class-transformer";
 
 export class CreateProductDto {
   @IsNotEmpty()
@@ -12,4 +14,15 @@ export class CreateProductDto {
   @IsNotEmpty()
   @IsUUID()
   brandId: string;
+
+  @IsNotEmpty()
+  @IsArray()
+  @IsUUID('4', { each: true })
+  categoryId: string[];
+
+  @IsNotEmpty()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateProductDetailDto)
+  productDetails: CreateProductDetailDto[];
 }
