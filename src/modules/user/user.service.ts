@@ -8,12 +8,15 @@ import { cleanErrorMessage } from '#/utils/helpers/clean-error-message';
 import * as bcrypt from 'bcrypt'
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { RoleService } from '../role/role.service';
+import { Cart } from './entities/cart.entity';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(Cart)
+    private readonly cartRepository: Repository<Cart>,
     private readonly roleRepository: RoleService
   ) { }
 
@@ -47,6 +50,7 @@ export class UserService {
       user.password = await bcrypt.hash(createUserDto.password, user.salt);
 
       const result = await this.userRepository.insert(user);
+      await this.cartRepository.insert({ userId: result.identifiers[0].id});
 
       return await this.userRepository.findOneOrFail({
         where: {
