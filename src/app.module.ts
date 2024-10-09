@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as Joi from 'joi';
-import { UsersModule } from './users/users.module';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { LoggerModule } from 'nestjs-pino';
 import { HealthModule } from './health/health.module';
@@ -15,6 +14,7 @@ import { RoleModule } from './modules/role/role.module';
 import { AddressModule } from './modules/address/address.module';
 import { PaymentModule } from './modules/payment/payment.module';
 import { ProductModule } from './modules/product/product.module';
+import { UserModule } from './modules/user/user.module';
 
 @Module({
   imports: [
@@ -100,7 +100,6 @@ import { ProductModule } from './modules/product/product.module';
       inject: [ConfigService],
     }),
     SeederModule,
-    UsersModule,
     HealthModule,
     BrandModule,
     CategoryModule,
@@ -108,6 +107,7 @@ import { ProductModule } from './modules/product/product.module';
     AddressModule,
     PaymentModule,
     ProductModule,
+    UserModule,
   ],
 })
 export class AppModule {}

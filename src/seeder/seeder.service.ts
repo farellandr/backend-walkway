@@ -3,8 +3,8 @@ import { EntityTarget } from 'typeorm/common/EntityTarget';
 import { DataSource } from 'typeorm';
 import { ObjectLiteral } from 'typeorm/common/ObjectLiteral';
 import { ConfigService } from '@nestjs/config';
-import { User } from '#/users/entities/user.entity';
-import { userMasterData } from '#/seeder/data/user';
+// import { User } from '#/users/entities/user.entity';
+// import { userMasterData } from '#/seeder/data/user';
 
 @Injectable()
 export class SeederService implements OnApplicationBootstrap {
@@ -38,7 +38,7 @@ export class SeederService implements OnApplicationBootstrap {
   }
 
   async seeder() {
-    await this.updateOrInsert(User, userMasterData);
+    // await this.updateOrInsert(User, userMasterData);
   }
 
   async onApplicationBootstrap() {
