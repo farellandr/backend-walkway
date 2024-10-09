@@ -5,16 +5,20 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './entities/product.entity';
 import { EntityNotFoundError, QueryFailedError, Repository } from 'typeorm';
 import { cleanErrorMessage } from '#/utils/helpers/clean-error-message';
+import { BrandService } from '../brand/brand.service';
 
 @Injectable()
 export class ProductService {
   constructor(
     @InjectRepository(Product)
-    private readonly productRepository: Repository<Product>
+    private readonly productRepository: Repository<Product>,
+    private readonly brandRepository: BrandService,
   ) { }
 
   async create(createProductDto: CreateProductDto) {
     try {
+      await Promise.all([this.brandRepository.findOne(createProductDto.brandId)])
+
       const result = await this.productRepository.insert(createProductDto);
 
       return await this.productRepository.findOneOrFail({
