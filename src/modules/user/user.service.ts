@@ -7,12 +7,14 @@ import { EntityNotFoundError, QueryFailedError, Repository } from 'typeorm';
 import { cleanErrorMessage } from '#/utils/helpers/clean-error-message';
 import * as bcrypt from 'bcrypt'
 import { UpdatePasswordDto } from './dto/update-password.dto';
+import { RoleService } from '../role/role.service';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
-    private readonly userRepository: Repository<User>
+    private readonly userRepository: Repository<User>,
+    private readonly roleRepository: RoleService
   ) { }
 
   async create(createUserDto: CreateUserDto) {
@@ -20,6 +22,9 @@ export class UserService {
       const user = new User;
       user.name = createUserDto.name;
       user.phone_number = createUserDto.phone_number;
+
+      await this.roleRepository.findOne(createUserDto.roleId)
+      user.roleId = createUserDto.roleId
 
       const isEmailExist = await this.userRepository.findOne({
         where: {
@@ -46,6 +51,9 @@ export class UserService {
       return await this.userRepository.findOneOrFail({
         where: {
           id: result.identifiers[0].id
+        },
+        relations: {
+          role: true
         }
       });
     } catch (error) {

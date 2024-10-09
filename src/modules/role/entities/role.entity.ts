@@ -1,5 +1,6 @@
+import { User } from "#/modules/user/entities/user.entity";
 import { Status } from "#/utils/enums/status.enum";
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 @Entity()
 export class Role {
@@ -15,6 +16,9 @@ export class Role {
     default: Status.ACTIVE
   })
   status: Status;
+
+  @OneToMany(() => User, (user) => user.role)
+  users: User[]
 
   @CreateDateColumn({
     type: 'timestamp with time zone',

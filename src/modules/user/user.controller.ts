@@ -45,7 +45,7 @@ export class UserController {
     };
   }
 
-  @Patch('changepassword/:id')
+  @Patch('change-password/:id')
   async updatePass(@Param('id', ParseUUIDPipe) id: string, @Body() updatePasswordDto: UpdatePasswordDto) {
     return {
       data: await this.userService.updatePassword(id, updatePasswordDto),
