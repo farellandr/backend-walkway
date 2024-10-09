@@ -1,5 +1,6 @@
+import { User } from "#/modules/user/entities/user.entity";
 import { PaymentStatus } from "#/utils/enums/payment-status.enum";
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 @Entity()
 export class Payment {
@@ -18,6 +19,11 @@ export class Payment {
   @Column({ type: 'varchar', length: 60 })
   va_number: string;
   
+  @ManyToOne(() => User, (user) => user.payments)
+  user: User;
+  @Column({ type: 'uuid' })
+  userId: string;
+
   @CreateDateColumn({
     type: 'timestamp with time zone',
     nullable: false,

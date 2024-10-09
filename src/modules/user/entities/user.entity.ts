@@ -1,6 +1,7 @@
+import { Payment } from "#/modules/payment/entities/payment.entity";
 import { Role } from "#/modules/role/entities/role.entity";
 import { Status } from "#/utils/enums/status.enum";
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, PrimaryColumn, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryColumn, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 @Entity()
 export class User {
@@ -33,6 +34,9 @@ export class User {
   role: Role;
   @Column({ type: 'uuid' })
   roleId: string;
+
+  @OneToMany(() => Payment, (payment) => payment.user)
+  payments: Payment[];
 
   @CreateDateColumn({
     type: 'timestamp with time zone',

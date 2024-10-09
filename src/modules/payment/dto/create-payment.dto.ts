@@ -1,5 +1,5 @@
 import { PaymentStatus } from "#/utils/enums/payment-status.enum";
-import { IsEnum, IsNotEmpty, IsNumber, IsString } from "class-validator"
+import { IsEnum, IsNotEmpty, IsNumber, IsString, IsUUID } from "class-validator"
 
 export class CreatePaymentDto {
   @IsNotEmpty()
@@ -17,4 +17,8 @@ export class CreatePaymentDto {
   @IsNotEmpty()
   @IsString()
   va_number: string;
+
+  @IsNotEmpty()
+  @IsUUID()
+  userId: string;
 }
