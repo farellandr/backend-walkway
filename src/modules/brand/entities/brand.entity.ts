@@ -1,5 +1,6 @@
+import { Product } from "#/modules/product/entities/product.entity";
 import { Status } from "#/utils/enums/status.enum";
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 @Entity()
 export class Brand {
@@ -18,6 +19,9 @@ export class Brand {
     default: Status.ACTIVE
   })
   status: Status;
+
+  @OneToMany(() => Product, (product) => product.brand)
+  products: Product[];
 
   @CreateDateColumn({
     type: 'timestamp with time zone',
