@@ -8,6 +8,8 @@ import { cleanErrorMessage } from '#/utils/helpers/clean-error-message';
 import { BrandService } from '../brand/brand.service';
 import { ProductDetail } from './entities/product-detail.entity';
 import { CategoryService } from '../category/category.service';
+import { CreateCartItemDto } from './dto/create-cart-item.dto';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class ProductService {
@@ -18,7 +20,80 @@ export class ProductService {
     private readonly productDetailRepository: Repository<ProductDetail>,
     private readonly brandRepository: BrandService,
     private readonly categoryRepository: CategoryService,
+    private readonly userCartRepository: UserService,
   ) { }
+
+  async findProductDetail(id: string) {
+    try {
+      return await this.productDetailRepository.findOneOrFail({
+        where: { id }
+      });
+    } catch (error) {
+      if (error instanceof EntityNotFoundError) {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.NOT_FOUND,
+            error: 'Data not found.',
+            message: cleanErrorMessage(error.message),
+          },
+          HttpStatus.NOT_FOUND,
+        );
+      } else {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+            error: 'Internal server error.',
+            message: error.message,
+          },
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+    }
+  }
+
+  async addToCart(createCartItemDto: CreateCartItemDto) {
+    try {
+      const [productDetail, cart] = await Promise.all([
+        this.findProductDetail(createCartItemDto.productDetailId),
+        this.userCartRepository.findCart(createCartItemDto.cartId)
+      ])
+
+      if (productDetail.stock - 1 >= 0) {
+        await this.productDetailRepository.save({ ...productDetail, stock: productDetail.stock - 1 })
+      } else {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+            error: 'Internal server error.',
+            message: 'Stock is not available.',
+          },
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+
+      return await this.userCartRepository.createCartItem(createCartItemDto)
+    } catch (error) {
+      if (error instanceof QueryFailedError) {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.BAD_REQUEST,
+            error: 'Database query failed.',
+            message: error.message,
+          },
+          HttpStatus.BAD_REQUEST,
+        );
+      } else {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+            error: 'Internal server error.',
+            message: error.message,
+          },
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+    }
+  }
 
   async create(createProductDto: CreateProductDto) {
     try {
@@ -76,7 +151,10 @@ export class ProductService {
     try {
       return await this.productRepository.findAndCount({
         skip: (page - 1) * limit,
-        take: limit
+        take: limit,
+        relations: {
+          productDetails: true,
+        }
       })
     } catch (error) {
       if (error instanceof QueryFailedError) {

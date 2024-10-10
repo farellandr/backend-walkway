@@ -1,5 +1,6 @@
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { User } from "./user.entity";
+import { CartItem } from "./cart-item.entity";
 
 @Entity()
 export class Cart {
@@ -7,9 +8,13 @@ export class Cart {
   id: string;
 
   @OneToOne(() => User, (user) => user.cart)
+  @JoinColumn()
   user: User;
   @Column({ type: 'uuid' })
   userId: string;
+
+  @OneToMany(() => CartItem, (cartItem) => cartItem.cart)
+  cartItems: CartItem[];
 
   @CreateDateColumn({
     type: 'timestamp with time zone',

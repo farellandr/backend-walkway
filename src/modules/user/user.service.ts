@@ -9,6 +9,8 @@ import * as bcrypt from 'bcrypt'
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { RoleService } from '../role/role.service';
 import { Cart } from './entities/cart.entity';
+import { CreateCartItemDto } from '../product/dto/create-cart-item.dto';
+import { CartItem } from './entities/cart-item.entity';
 
 @Injectable()
 export class UserService {
@@ -17,8 +19,78 @@ export class UserService {
     private readonly userRepository: Repository<User>,
     @InjectRepository(Cart)
     private readonly cartRepository: Repository<Cart>,
+    @InjectRepository(CartItem)
+    private readonly cartItemRepository: Repository<CartItem>,
     private readonly roleRepository: RoleService
   ) { }
+
+  async createCartItem(createCartItemDto: CreateCartItemDto) {
+    try {
+      const result = await this.cartItemRepository.insert(createCartItemDto)
+
+      return await this.cartItemRepository.findOneOrFail({
+        where: {
+          id: result.identifiers[0].id
+        },
+        relations: {
+          productDetail: {
+            product: true,
+          },
+          cart: {
+            user: true
+          },
+        }
+      });
+    } catch (error) {
+      if (error instanceof QueryFailedError) {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.BAD_REQUEST,
+            error: 'Database query failed.',
+            message: error.message,
+          },
+          HttpStatus.BAD_REQUEST,
+        );
+      } else {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+            error: 'Internal server error.',
+            message: error.message,
+          },
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+    }
+  }
+
+  async findCart(id: string) {
+    try {
+      return await this.cartRepository.findOneOrFail({
+        where: { id }
+      });
+    } catch (error) {
+      if (error instanceof EntityNotFoundError) {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.NOT_FOUND,
+            error: 'Data not found.',
+            message: cleanErrorMessage(error.message),
+          },
+          HttpStatus.NOT_FOUND,
+        );
+      } else {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+            error: 'Internal server error.',
+            message: error.message,
+          },
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+    }
+  }
 
   async create(createUserDto: CreateUserDto) {
     try {
@@ -50,7 +122,7 @@ export class UserService {
       user.password = await bcrypt.hash(createUserDto.password, user.salt);
 
       const result = await this.userRepository.insert(user);
-      await this.cartRepository.insert({ userId: result.identifiers[0].id});
+      await this.cartRepository.insert({ userId: result.identifiers[0].id });
 
       return await this.userRepository.findOneOrFail({
         where: {
@@ -87,7 +159,10 @@ export class UserService {
     try {
       return await this.userRepository.findAndCount({
         skip: (page - 1) * limit,
-        take: limit
+        take: limit,
+        relations: {
+          cart: true
+        }
       })
     } catch (error) {
       if (error instanceof QueryFailedError) {

@@ -1,5 +1,5 @@
 import { CartItem } from "#/modules/user/entities/cart-item.entity";
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, ManyToOne, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Product } from "./product.entity";
 
 @Entity()
@@ -18,8 +18,8 @@ export class ProductDetail {
   @Column({ type: 'uuid' })
   productId: string;
 
-  @OneToOne(() => CartItem, (cartItem) => cartItem.product)
-  cartItem: CartItem;
+  @OneToMany(() => CartItem, (cartItem) => cartItem.productDetail)
+  cartItem: CartItem[];
 
   @CreateDateColumn({
     type: 'timestamp with time zone',
