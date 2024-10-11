@@ -24,6 +24,34 @@ export class UserService {
     private readonly roleRepository: RoleService
   ) { }
 
+  async findEmail(email: string) {
+    try {
+      return await this.userRepository.findOneOrFail({
+        where: { email }
+      });
+    } catch (error) {
+      if (error instanceof EntityNotFoundError) {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.UNAUTHORIZED,
+            error: 'Data not found.',
+            message: cleanErrorMessage(error.message),
+          },
+          HttpStatus.UNAUTHORIZED,
+        );
+      } else {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+            error: 'Internal server error.',
+            message: error.message,
+          },
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+    }
+  }
+
   async createCartItem(createCartItemDto: CreateCartItemDto) {
     try {
       const result = await this.cartItemRepository.insert(createCartItemDto)

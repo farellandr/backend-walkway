@@ -15,6 +15,7 @@ import { AddressModule } from './modules/address/address.module';
 import { PaymentModule } from './modules/payment/payment.module';
 import { ProductModule } from './modules/product/product.module';
 import { UserModule } from './modules/user/user.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -108,6 +109,7 @@ import { UserModule } from './modules/user/user.module';
     PaymentModule,
     ProductModule,
     UserModule,
+    AuthModule,
   ],
 })
 export class AppModule {}
