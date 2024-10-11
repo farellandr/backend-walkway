@@ -1,6 +1,7 @@
 import { CartItem } from "#/modules/user/entities/cart-item.entity";
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Product } from "./product.entity";
+import { BidProduct } from "./bid-product.entity";
 
 @Entity()
 export class ProductDetail {
@@ -17,6 +18,9 @@ export class ProductDetail {
   product: Product;
   @Column({ type: 'uuid' })
   productId: string;
+
+  @OneToMany(() => BidProduct, (bidProduct) => bidProduct.productDetail)
+  bids: BidProduct[];
 
   @OneToMany(() => CartItem, (cartItem) => cartItem.productDetail)
   cartItem: CartItem[];

@@ -3,6 +3,7 @@ import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { CreateCartItemDto } from './dto/create-cart-item.dto';
+import { CreateBidProductDto } from './dto/create-bid-product.dto';
 
 @Controller('product')
 export class ProductController {
@@ -21,6 +22,14 @@ export class ProductController {
   async addToCart(@Body() createCartItemDto: CreateCartItemDto) {
     return {
       data: await this.productService.addToCart(createCartItemDto),
+      statusCode: HttpStatus.CREATED,
+      message: 'success'
+    }
+  }
+  @Post('/add-to-bid')
+  async addToBid(@Body() createBidProductDto: CreateBidProductDto) {
+    return {
+      data: await this.productService.addToBid(createBidProductDto),
       statusCode: HttpStatus.CREATED,
       message: 'success'
     }

@@ -7,10 +7,11 @@ import { BrandModule } from '../brand/brand.module';
 import { ProductDetail } from './entities/product-detail.entity';
 import { CategoryModule } from '../category/category.module';
 import { UserModule } from '../user/user.module';
+import { BidProduct } from './entities/bid-product.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Product, ProductDetail]),
+    TypeOrmModule.forFeature([Product, ProductDetail, BidProduct]),
     BrandModule,
     CategoryModule,
     UserModule

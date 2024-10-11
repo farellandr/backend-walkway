@@ -10,6 +10,8 @@ import { ProductDetail } from './entities/product-detail.entity';
 import { CategoryService } from '../category/category.service';
 import { CreateCartItemDto } from './dto/create-cart-item.dto';
 import { UserService } from '../user/user.service';
+import { CreateBidProductDto } from './dto/create-bid-product.dto';
+import { BidProduct } from './entities/bid-product.entity';
 
 @Injectable()
 export class ProductService {
@@ -18,10 +20,64 @@ export class ProductService {
     private readonly productRepository: Repository<Product>,
     @InjectRepository(ProductDetail)
     private readonly productDetailRepository: Repository<ProductDetail>,
+    @InjectRepository(BidProduct)
+    private readonly bidProductRepository: Repository<BidProduct>,
     private readonly brandRepository: BrandService,
     private readonly categoryRepository: CategoryService,
     private readonly userCartRepository: UserService,
   ) { }
+
+  async addToBid(createBidProductDto: CreateBidProductDto) {
+    try {
+      const productDetail = await this.findProductDetail(createBidProductDto.productDetailId);
+
+      if (productDetail.stock - 1 >= 0) {
+        await this.productDetailRepository.save({ ...productDetail, stock: productDetail.stock - 1 })
+      } else {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+            error: 'Internal server error.',
+            message: 'Stock is not available.',
+          },
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+
+      const result = await this.bidProductRepository.insert(createBidProductDto)
+
+      return await this.bidProductRepository.findOneOrFail({
+        where: {
+          id: result.identifiers[0].id
+        },
+        relations: {
+          productDetail: {
+            product: true
+          }
+        }
+      });
+    } catch (error) {
+      if (error instanceof QueryFailedError) {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.BAD_REQUEST,
+            error: 'Database query failed.',
+            message: error.message,
+          },
+          HttpStatus.BAD_REQUEST,
+        );
+      } else {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+            error: 'Internal server error.',
+            message: error.message,
+          },
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+    }
+  }
 
   async findProductDetail(id: string) {
     try {
