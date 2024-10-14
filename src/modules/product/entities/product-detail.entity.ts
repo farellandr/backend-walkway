@@ -2,6 +2,7 @@ import { CartItem } from "#/modules/user/entities/cart-item.entity";
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Product } from "./product.entity";
 import { BidProduct } from "./bid-product.entity";
+import { Status } from "#/utils/enums/status.enum";
 
 @Entity()
 export class ProductDetail {
@@ -13,6 +14,13 @@ export class ProductDetail {
 
   @Column({ type: 'int' })
   stock: number;
+
+  @Column({
+    type: 'enum',
+    enum: Status,
+    default: Status.ACTIVE
+  })
+  status: Status;
 
   @ManyToOne(() => Product, (product) => product.productDetails)
   product: Product;

@@ -79,6 +79,7 @@ export class ProductService {
     }
   }
 
+
   async findProductDetail(id: string) {
     try {
       return await this.productDetailRepository.findOneOrFail({
@@ -157,6 +158,18 @@ export class ProductService {
         this.brandRepository.findOne(createProductDto.brandId),
         this.categoryRepository.findMany(createProductDto.categoryId)
       ])
+      const sizes = createProductDto.productDetails.map(detail => detail.size);
+      const hasDuplicate = sizes.some((size, index) => sizes.indexOf(size) !== index);
+      if (hasDuplicate) {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.BAD_REQUEST,
+            error: 'Database query failed.',
+            message: 'Size must not be a duplicate.',
+          },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
 
       const product = new Product;
       product.name = brand.name + ' ' + createProductDto.name;
@@ -209,7 +222,9 @@ export class ProductService {
         skip: (page - 1) * limit,
         take: limit,
         relations: {
+          brand: true,
           productDetails: true,
+          categories: true
         }
       })
     } catch (error) {
@@ -239,7 +254,14 @@ export class ProductService {
   async findOne(id: string) {
     try {
       return await this.productRepository.findOneOrFail({
-        where: { id }
+        where: {
+          id
+        },
+        relations: {
+          brand: true,
+          categories: true,
+          productDetails: true,
+        }
       });
     } catch (error) {
       if (error instanceof EntityNotFoundError) {
@@ -266,13 +288,46 @@ export class ProductService {
 
   async update(id: string, updateProductDto: UpdateProductDto) {
     try {
-      await this.productRepository.findOneOrFail({
+      const product = await this.productRepository.findOneOrFail({
         where: { id },
+        relations: {
+          productDetails: true,
+          brand: true
+        }
       });
 
-      await this.productRepository.update(id, updateProductDto);
+      const { categoryId, productDetails, ...updateProductData } = updateProductDto;
+
+      Object.assign(product, updateProductData);
+
+      const [brand, category] = await Promise.all([
+        this.brandRepository.findOne(updateProductDto.brandId),
+        this.categoryRepository.findMany(categoryId)
+      ]);
+      product.name = brand.name + ' ' + product.name;
+      product.categories = category;
+
+      await this.productRepository.save(product)
+
+      for (const detail of productDetails) {
+        const existingDetail = product.productDetails.find((d) => d.size === detail.size);
+
+        if (existingDetail) {
+          existingDetail.stock = detail.stock;
+          await this.productDetailRepository.update(existingDetail.id, { stock: detail.stock });
+        } else {
+          await this.productDetailRepository.insert({ ...detail, productId: product.id })
+        }
+      }
       return await this.productRepository.findOneOrFail({
-        where: { id },
+        where: {
+          id
+        },
+        relations: {
+          brand: true,
+          categories: true,
+          productDetails: true
+        }
       });
     } catch (error) {
       if (error instanceof EntityNotFoundError) {
@@ -305,7 +360,6 @@ export class ProductService {
       }
     }
   }
-
 
   async remove(id: string) {
     try {

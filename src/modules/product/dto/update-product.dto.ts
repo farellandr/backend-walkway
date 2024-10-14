@@ -1,9 +1,32 @@
-import { PartialType } from '@nestjs/swagger';
-import { CreateProductDto } from './create-product.dto';
-import { IsEnum, IsOptional } from 'class-validator';
+import { IsArray, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, IsUUID, ValidateNested } from 'class-validator';
 import { Status } from '#/utils/enums/status.enum';
+import { Type } from 'class-transformer';
+import { UpdateProductDetailDto } from './update-product-detail.dto';
 
-export class UpdateProductDto extends PartialType(CreateProductDto) {
+export class UpdateProductDto {
+  @IsNotEmpty()
+  @IsString()
+  name: string;
+
+  @IsNotEmpty()
+  @IsNumber()
+  price: number;
+
+  @IsNotEmpty()
+  @IsUUID()
+  brandId: string;
+
+  @IsNotEmpty()
+  @IsArray()
+  @IsUUID('4', { each: true })
+  categoryId: string[];
+
+  @IsNotEmpty()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => UpdateProductDetailDto)
+  productDetails: UpdateProductDetailDto[];
+
   @IsOptional()
   @IsEnum(Status)
   status?: Status;
