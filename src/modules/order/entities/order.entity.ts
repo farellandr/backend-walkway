@@ -1,7 +1,7 @@
 import { OrderStatus } from "#/utils/enums/order-status.enum";
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { User } from "./user.entity";
 import { OrderItem } from "./order-item.entity";
+import { User } from "#/modules/user/entities/user.entity";
 
 @Entity()
 export class Order {

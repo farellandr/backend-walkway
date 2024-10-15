@@ -3,7 +3,7 @@ import { Role } from "#/modules/role/entities/role.entity";
 import { Status } from "#/utils/enums/status.enum";
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryColumn, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Cart } from "./cart.entity";
-import { Order } from "./order.entity";
+import { Order } from "#/modules/order/entities/order.entity";
 
 @Entity()
 export class User {

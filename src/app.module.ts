@@ -17,6 +17,7 @@ import { ProductModule } from './modules/product/product.module';
 import { UserModule } from './modules/user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { AreaModule } from './area/area.module';
+import { OrderModule } from './modules/order/order.module';
 
 @Module({
   imports: [
@@ -112,6 +113,7 @@ import { AreaModule } from './area/area.module';
     UserModule,
     AuthModule,
     AreaModule,
+    OrderModule,
   ],
 })
 export class AppModule {}
