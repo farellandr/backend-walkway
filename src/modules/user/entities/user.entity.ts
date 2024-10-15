@@ -4,6 +4,7 @@ import { Status } from "#/utils/enums/status.enum";
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryColumn, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Cart } from "./cart.entity";
 import { Order } from "#/modules/order/entities/order.entity";
+import { Address } from "./address.entity";
 
 @Entity()
 export class User {
@@ -36,6 +37,9 @@ export class User {
   role: Role;
   @Column({ type: 'uuid' })
   roleId: string;
+
+  @OneToMany(() => Address, (address) => address.user)
+  addresses: Address[];
 
   @OneToOne(() => Cart, (cart) => cart.user)
   cart: Cart;

@@ -1,6 +1,15 @@
-import { IsNotEmpty, IsPhoneNumber, IsString, Matches } from "class-validator";
 
-export class CreateAddressDto {
+import { IsNotEmpty, IsPhoneNumber, IsString, IsUUID, Matches } from 'class-validator';
+
+export class UpdateAddressDto {
+  @IsNotEmpty()
+  @IsUUID()
+  addressId: string;
+
+  @IsNotEmpty()
+  @IsUUID()
+  userId: string;
+
   @IsNotEmpty()
   @IsString()
   contact_name: string;

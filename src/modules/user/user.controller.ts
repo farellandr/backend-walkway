@@ -3,6 +3,8 @@ import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
+import { CreateAddressDto } from './dto/create-address.dto';
+import { UpdateAddressDto } from './dto/update-address.dto';
 
 @Controller('user')
 export class UserController {
@@ -15,6 +17,34 @@ export class UserController {
       statusCode: HttpStatus.CREATED,
       message: 'success'
     }
+  }
+
+  @Post('add-address')
+  async createAddress(@Body() createAddressDto: CreateAddressDto) {
+    return {
+      data: await this.userService.createAddress(createAddressDto),
+      statusCode: HttpStatus.CREATED,
+      message: 'success'
+    }
+  }
+
+  @Patch('/edit-address')
+  async updateAddress(@Body() updateAddressDto: UpdateAddressDto) {
+    return {
+      data: await this.userService.updateAddress(updateAddressDto),
+      statusCode: HttpStatus.CREATED,
+      message: 'success'
+    }
+  }
+
+  @Delete('/remove/:id')
+  async removeAddress(@Param('id', ParseUUIDPipe) id: string) {
+    await this.userService.removeAddress(id);
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'success',
+    };
   }
 
   @Get()

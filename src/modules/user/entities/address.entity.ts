@@ -1,4 +1,5 @@
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { User } from "./user.entity";
 
 @Entity()
 export class Address {
@@ -28,6 +29,11 @@ export class Address {
 
   @Column({ type: 'varchar', length: 60 })
   note: string;
+
+  @ManyToOne(() => User, (user) => user.addresses)
+  user: User;
+  @Column('uuid')
+  userId: string;
 
   @CreateDateColumn({
     type: 'timestamp with time zone',

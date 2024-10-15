@@ -11,6 +11,11 @@ import { RoleService } from '../role/role.service';
 import { Cart } from './entities/cart.entity';
 import { CreateCartItemDto } from '../product/dto/create-cart-item.dto';
 import { CartItem } from './entities/cart-item.entity';
+import { CreateAddressDto } from './dto/create-address.dto';
+import { Address } from './entities/address.entity';
+import { UpdateAddressDto } from './dto/update-address.dto';
+import { CommonErrorHandler } from '#/utils/helpers/error-handler';
+import { ProductDetail } from '../product/entities/product-detail.entity';
 
 @Injectable()
 export class UserService {
@@ -21,8 +26,57 @@ export class UserService {
     private readonly cartRepository: Repository<Cart>,
     @InjectRepository(CartItem)
     private readonly cartItemRepository: Repository<CartItem>,
+    @InjectRepository(Address)
+    private readonly addressRepository: Repository<Address>,
+    @InjectRepository(ProductDetail)
+    private readonly productDetailRepository: Repository<ProductDetail>,
+
     private readonly roleRepository: RoleService
   ) { }
+
+  async createAddress(createAddressDto: CreateAddressDto) {
+    try {
+      await this.userRepository.findOneOrFail({ where: { id: createAddressDto.userId } })
+
+      const result = await this.addressRepository.insert(createAddressDto);
+      return await this.addressRepository.findOneOrFail({
+        where: {
+          id: result.identifiers[0].id
+        }
+      });
+    } catch (error) {
+      CommonErrorHandler(error);
+    }
+  }
+
+  async updateAddress(updateAddressDto: UpdateAddressDto) {
+    try {
+      const { addressId, ...addressData } = updateAddressDto;
+      await this.userRepository.findOneOrFail({ where: { id: addressData.userId } })
+      await this.addressRepository.findOneOrFail({ where: { id: addressId } })
+
+      await this.addressRepository.update(addressId, addressData)
+      return await this.addressRepository.findOneOrFail({
+        where: {
+          id: addressId
+        }
+      });
+    } catch (error) {
+      CommonErrorHandler(error);
+    }
+  }
+
+  async removeAddress(id: string) {
+    try {
+      await this.addressRepository.findOneOrFail({
+        where: { id },
+      });
+
+      await this.addressRepository.softDelete(id);
+    } catch (error) {
+      CommonErrorHandler(error);
+    }
+  }
 
   async findEmail(email: string) {
     try {
@@ -30,32 +84,18 @@ export class UserService {
         where: { email }
       });
     } catch (error) {
-      if (error instanceof EntityNotFoundError) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.UNAUTHORIZED,
-            error: 'Data not found.',
-            message: cleanErrorMessage(error.message),
-          },
-          HttpStatus.UNAUTHORIZED,
-        );
-      } else {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: 'Internal server error.',
-            message: error.message,
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
-      }
+      CommonErrorHandler(error);
     }
   }
 
   async createCartItem(createCartItemDto: CreateCartItemDto) {
     try {
-      const result = await this.cartItemRepository.insert(createCartItemDto)
+      await Promise.all([
+        this.cartRepository.findOneOrFail({ where: { id: createCartItemDto.cartId } }),
+        this.productDetailRepository.findOneOrFail({ where: { id: createCartItemDto.productDetailId } })
+      ])
 
+      const result = await this.cartItemRepository.insert(createCartItemDto)
       return await this.cartItemRepository.findOneOrFail({
         where: {
           id: result.identifiers[0].id
@@ -70,28 +110,11 @@ export class UserService {
         }
       });
     } catch (error) {
-      if (error instanceof QueryFailedError) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            error: 'Database query failed.',
-            message: error.message,
-          },
-          HttpStatus.BAD_REQUEST,
-        );
-      } else {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: 'Internal server error.',
-            message: error.message,
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
-      }
+      CommonErrorHandler(error);
     }
   }
 
+  // should be deleted
   async findCart(id: string) {
     try {
       return await this.cartRepository.findOneOrFail({
@@ -138,7 +161,7 @@ export class UserService {
         throw new HttpException(
           {
             statusCode: HttpStatus.BAD_REQUEST,
-            error: 'Database query failed.',
+            error: 'Bad Request.',
             message: 'Email already taken',
           },
           HttpStatus.BAD_REQUEST,
@@ -156,63 +179,24 @@ export class UserService {
         where: {
           id: result.identifiers[0].id
         },
-        relations: {
-          role: true
-        }
       });
     } catch (error) {
-      if (error instanceof QueryFailedError) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            error: 'Database query failed.',
-            message: error.message,
-          },
-          HttpStatus.BAD_REQUEST,
-        );
-      } else {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: 'Internal server error.',
-            message: error.message,
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
-      }
+      CommonErrorHandler(error);
     }
   }
 
+  // should only get admins
   async findAll(page: number = 1, limit: number = 10) {
     try {
       return await this.userRepository.findAndCount({
         skip: (page - 1) * limit,
         take: limit,
         relations: {
-          cart: true
+          role: true,
         }
       })
     } catch (error) {
-      if (error instanceof QueryFailedError) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            error: 'Database query failed.',
-            message: error.message,
-          },
-          HttpStatus.BAD_REQUEST,
-        );
-      } else {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: 'Internal server error.',
-            message: error.message,
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
-      }
-
+      CommonErrorHandler(error);
     }
   }
 
@@ -222,25 +206,7 @@ export class UserService {
         where: { id }
       });
     } catch (error) {
-      if (error instanceof EntityNotFoundError) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.NOT_FOUND,
-            error: 'Data not found.',
-            message: cleanErrorMessage(error.message),
-          },
-          HttpStatus.NOT_FOUND,
-        );
-      } else {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: 'Internal server error.',
-            message: error.message,
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
-      }
+      CommonErrorHandler(error);
     }
   }
 
@@ -255,34 +221,7 @@ export class UserService {
         where: { id },
       });
     } catch (error) {
-      if (error instanceof EntityNotFoundError) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.NOT_FOUND,
-            error: 'Data not found.',
-            message: cleanErrorMessage(error.message),
-          },
-          HttpStatus.NOT_FOUND,
-        );
-      } else if (error instanceof QueryFailedError) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            error: 'Database query failed.',
-            message: error.message,
-          },
-          HttpStatus.BAD_REQUEST,
-        );
-      } else {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: 'Internal server error.',
-            message: error.message,
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
-      }
+      CommonErrorHandler(error);
     }
   }
 
@@ -297,47 +236,20 @@ export class UserService {
         throw new HttpException(
           {
             statusCode: HttpStatus.BAD_REQUEST,
-            error: 'Database query failed.',
+            error: 'Bad Request.',
             message: 'New password must be different.',
           },
           HttpStatus.BAD_REQUEST,
         );
       }
-      updatePasswordDto.password = await bcrypt.hash(updatePasswordDto.password, updatePasswordDto.salt)
+      updatePasswordDto.password = await bcrypt.hash(updatePasswordDto.password, user.salt)
 
       await this.userRepository.update(id, updatePasswordDto);
       return await this.userRepository.findOneOrFail({
         where: { id },
       });
     } catch (error) {
-      if (error instanceof EntityNotFoundError) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.NOT_FOUND,
-            error: 'Data not found.',
-            message: cleanErrorMessage(error.message),
-          },
-          HttpStatus.NOT_FOUND,
-        );
-      } else if (error instanceof QueryFailedError) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            error: 'Database query failed.',
-            message: error.message,
-          },
-          HttpStatus.BAD_REQUEST,
-        );
-      } else {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: 'Internal server error.',
-            message: error.message,
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
-      }
+      CommonErrorHandler(error);
     }
   }
 
@@ -349,25 +261,7 @@ export class UserService {
 
       await this.userRepository.softDelete(id);
     } catch (error) {
-      if (error instanceof EntityNotFoundError) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.NOT_FOUND,
-            error: 'Data not found.',
-            message: cleanErrorMessage(error.message),
-          },
-          HttpStatus.NOT_FOUND,
-        );
-      } else {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: 'Internal server error.',
-            message: error.message,
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
-      }
+      CommonErrorHandler(error);
     }
   }
 }

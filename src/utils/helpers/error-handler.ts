@@ -24,11 +24,11 @@ export function CommonErrorHandler(error: any) {
   } else {
     throw new HttpException(
       {
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        error: 'Internal server error.',
-        message: error?.message || 'An unexpected error occurred.',
+        statusCode: error?.response?.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
+        error: error?.response?.error || 'Internal server error.',
+        message: error?.response?.message || 'An unexpected error occurred.',
       },
-      HttpStatus.INTERNAL_SERVER_ERROR,
+      error?.response?.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
     );
   }
 }
