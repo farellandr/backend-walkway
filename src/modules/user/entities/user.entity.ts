@@ -3,6 +3,7 @@ import { Role } from "#/modules/role/entities/role.entity";
 import { Status } from "#/utils/enums/status.enum";
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryColumn, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Cart } from "./cart.entity";
+import { Order } from "./order.entity";
 
 @Entity()
 export class User {
@@ -38,6 +39,9 @@ export class User {
 
   @OneToOne(() => Cart, (cart) => cart.user)
   cart: Cart;
+
+  @OneToMany(() => Order, (order) => order.user)
+  orders: Order[];
 
   @OneToMany(() => Payment, (payment) => payment.user)
   payments: Payment[];

@@ -1,5 +1,7 @@
 import { OrderStatus } from "#/utils/enums/order-status.enum";
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { User } from "./user.entity";
+import { OrderItem } from "./order-item.entity";
 
 @Entity()
 export class Order {
@@ -22,6 +24,13 @@ export class Order {
   })
   status: OrderStatus;
 
+  @ManyToOne(() => User, (user) => user.orders)
+  user: User;
+  @Column('uuid')
+  userId: string;
+
+  @OneToMany(() => OrderItem, (orderItems) => orderItems.order)
+  orderItems: OrderItem[];
 
   @CreateDateColumn({
     type: 'timestamp with time zone',
