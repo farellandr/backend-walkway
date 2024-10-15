@@ -16,6 +16,7 @@ import { PaymentModule } from './modules/payment/payment.module';
 import { ProductModule } from './modules/product/product.module';
 import { UserModule } from './modules/user/user.module';
 import { AuthModule } from './auth/auth.module';
+import { AreaModule } from './area/area.module';
 
 @Module({
   imports: [
@@ -110,6 +111,7 @@ import { AuthModule } from './auth/auth.module';
     ProductModule,
     UserModule,
     AuthModule,
+    AreaModule,
   ],
 })
 export class AppModule {}
