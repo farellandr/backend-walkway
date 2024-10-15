@@ -5,6 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Category } from './entities/category.entity';
 import { EntityNotFoundError, QueryFailedError, Repository } from 'typeorm';
 import { cleanErrorMessage } from '#/utils/helpers/clean-error-message';
+import { CommonErrorHandler } from '#/utils/helpers/error-handler';
 
 @Injectable()
 export class CategoryService {
@@ -23,25 +24,7 @@ export class CategoryService {
         }
       });
     } catch (error) {
-      if (error instanceof QueryFailedError) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            error: 'Database query failed.',
-            message: error.message,
-          },
-          HttpStatus.BAD_REQUEST,
-        );
-      } else {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: 'Internal server error.',
-            message: error.message,
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
-      }
+      CommonErrorHandler(error);
     }
   }
 
@@ -52,26 +35,7 @@ export class CategoryService {
         take: limit
       })
     } catch (error) {
-      if (error instanceof QueryFailedError) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            error: 'Database query failed.',
-            message: error.message,
-          },
-          HttpStatus.BAD_REQUEST,
-        );
-      } else {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: 'Internal server error.',
-            message: error.message,
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
-      }
-
+      CommonErrorHandler(error);
     }
   }
 
@@ -81,25 +45,7 @@ export class CategoryService {
         where: { id }
       });
     } catch (error) {
-      if (error instanceof EntityNotFoundError) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.NOT_FOUND,
-            error: 'Data not found.',
-            message: cleanErrorMessage(error.message),
-          },
-          HttpStatus.NOT_FOUND,
-        );
-      } else {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: 'Internal server error.',
-            message: error.message,
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
-      }
+      CommonErrorHandler(error);
     }
   }
 
@@ -115,25 +61,7 @@ export class CategoryService {
   
       return categories;  
     } catch (error) {
-      if (error instanceof EntityNotFoundError) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.NOT_FOUND,
-            error: 'Data not found.',
-            message: cleanErrorMessage(error.message),
-          },
-          HttpStatus.NOT_FOUND,
-        );
-      } else {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: 'Internal server error.',
-            message: error.message,
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
-      }
+      CommonErrorHandler(error);
     }
   }
 
@@ -148,34 +76,7 @@ export class CategoryService {
         where: { id },
       });
     } catch (error) {
-      if (error instanceof EntityNotFoundError) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.NOT_FOUND,
-            error: 'Data not found.',
-            message: cleanErrorMessage(error.message),
-          },
-          HttpStatus.NOT_FOUND,
-        );
-      } else if (error instanceof QueryFailedError) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            error: 'Database query failed.',
-            message: error.message,
-          },
-          HttpStatus.BAD_REQUEST,
-        );
-      } else {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: 'Internal server error.',
-            message: error.message,
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
-      }
+      CommonErrorHandler(error);
     }
   }
 
@@ -188,25 +89,7 @@ export class CategoryService {
 
       await this.categoryrepository.softDelete(id);
     } catch (error) {
-      if (error instanceof EntityNotFoundError) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.NOT_FOUND,
-            error: 'Data not found.',
-            message: cleanErrorMessage(error.message),
-          },
-          HttpStatus.NOT_FOUND,
-        );
-      } else {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: 'Internal server error.',
-            message: error.message,
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
-      }
+      CommonErrorHandler(error);
     }
   }
 }

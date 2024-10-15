@@ -12,6 +12,7 @@ import { CreateCartItemDto } from './dto/create-cart-item.dto';
 import { UserService } from '../user/user.service';
 import { CreateBidProductDto } from './dto/create-bid-product.dto';
 import { BidProduct } from './entities/bid-product.entity';
+import { CommonErrorHandler } from '#/utils/helpers/error-handler';
 
 @Injectable()
 export class ProductService {
@@ -36,16 +37,15 @@ export class ProductService {
       } else {
         throw new HttpException(
           {
-            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: 'Internal server error.',
+            statusCode: HttpStatus.BAD_REQUEST,
+            error: 'Bad Request.',
             message: 'Stock is not available.',
           },
-          HttpStatus.INTERNAL_SERVER_ERROR,
+          HttpStatus.BAD_REQUEST,
         );
       }
 
       const result = await this.bidProductRepository.insert(createBidProductDto)
-
       return await this.bidProductRepository.findOneOrFail({
         where: {
           id: result.identifiers[0].id
@@ -57,25 +57,7 @@ export class ProductService {
         }
       });
     } catch (error) {
-      if (error instanceof QueryFailedError) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            error: 'Database query failed.',
-            message: error.message,
-          },
-          HttpStatus.BAD_REQUEST,
-        );
-      } else {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: 'Internal server error.',
-            message: error.message,
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
-      }
+      CommonErrorHandler(error);
     }
   }
 
@@ -86,25 +68,7 @@ export class ProductService {
         where: { id }
       });
     } catch (error) {
-      if (error instanceof EntityNotFoundError) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.NOT_FOUND,
-            error: 'Data not found.',
-            message: cleanErrorMessage(error.message),
-          },
-          HttpStatus.NOT_FOUND,
-        );
-      } else {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: 'Internal server error.',
-            message: error.message,
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
-      }
+      CommonErrorHandler(error);
     }
   }
 
@@ -121,7 +85,7 @@ export class ProductService {
         throw new HttpException(
           {
             statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: 'Internal server error.',
+            error: 'Bad Request.',
             message: 'Stock is not available.',
           },
           HttpStatus.INTERNAL_SERVER_ERROR,
@@ -130,25 +94,7 @@ export class ProductService {
 
       return await this.userCartRepository.createCartItem(createCartItemDto)
     } catch (error) {
-      if (error instanceof QueryFailedError) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            error: 'Database query failed.',
-            message: error.message,
-          },
-          HttpStatus.BAD_REQUEST,
-        );
-      } else {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: 'Internal server error.',
-            message: error.message,
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
-      }
+      CommonErrorHandler(error);
     }
   }
 
@@ -194,25 +140,7 @@ export class ProductService {
         }
       });
     } catch (error) {
-      if (error instanceof QueryFailedError) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            error: 'Database query failed.',
-            message: error.message,
-          },
-          HttpStatus.BAD_REQUEST,
-        );
-      } else {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: 'Internal server error.',
-            message: error.message,
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
-      }
+      CommonErrorHandler(error);
     }
   }
 
@@ -228,26 +156,7 @@ export class ProductService {
         }
       })
     } catch (error) {
-      if (error instanceof QueryFailedError) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            error: 'Database query failed.',
-            message: error.message,
-          },
-          HttpStatus.BAD_REQUEST,
-        );
-      } else {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: 'Internal server error.',
-            message: error.message,
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
-      }
-
+      CommonErrorHandler(error);
     }
   }
 
@@ -264,25 +173,7 @@ export class ProductService {
         }
       });
     } catch (error) {
-      if (error instanceof EntityNotFoundError) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.NOT_FOUND,
-            error: 'Data not found.',
-            message: cleanErrorMessage(error.message),
-          },
-          HttpStatus.NOT_FOUND,
-        );
-      } else {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: 'Internal server error.',
-            message: error.message,
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
-      }
+      CommonErrorHandler(error);
     }
   }
 
@@ -330,34 +221,7 @@ export class ProductService {
         }
       });
     } catch (error) {
-      if (error instanceof EntityNotFoundError) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.NOT_FOUND,
-            error: 'Data not found.',
-            message: cleanErrorMessage(error.message),
-          },
-          HttpStatus.NOT_FOUND,
-        );
-      } else if (error instanceof QueryFailedError) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            error: 'Database query failed.',
-            message: error.message,
-          },
-          HttpStatus.BAD_REQUEST,
-        );
-      } else {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: 'Internal server error.',
-            message: error.message,
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
-      }
+      CommonErrorHandler(error);
     }
   }
 
@@ -369,25 +233,7 @@ export class ProductService {
 
       await this.productRepository.softDelete(id);
     } catch (error) {
-      if (error instanceof EntityNotFoundError) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.NOT_FOUND,
-            error: 'Data not found.',
-            message: cleanErrorMessage(error.message),
-          },
-          HttpStatus.NOT_FOUND,
-        );
-      } else {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: 'Internal server error.',
-            message: error.message,
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
-      }
+      CommonErrorHandler(error);
     }
   }
 }

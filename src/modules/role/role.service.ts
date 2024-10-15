@@ -5,6 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Role } from './entities/role.entity';
 import { EntityNotFoundError, QueryFailedError, Repository } from 'typeorm';
 import { cleanErrorMessage } from '#/utils/helpers/clean-error-message';
+import { CommonErrorHandler } from '#/utils/helpers/error-handler';
 
 @Injectable()
 export class RoleService {
@@ -23,25 +24,7 @@ export class RoleService {
         }
       });
     } catch (error) {
-      if (error instanceof QueryFailedError) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            error: 'Database query failed.',
-            message: error.message,
-          },
-          HttpStatus.BAD_REQUEST,
-        );
-      } else {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: 'Internal server error.',
-            message: error.message,
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
-      }
+      CommonErrorHandler(error);
     }
   }
 
@@ -52,26 +35,7 @@ export class RoleService {
         take: limit
       })
     } catch (error) {
-      if (error instanceof QueryFailedError) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            error: 'Database query failed.',
-            message: error.message,
-          },
-          HttpStatus.BAD_REQUEST,
-        );
-      } else {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: 'Internal server error.',
-            message: error.message,
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
-      }
-
+      CommonErrorHandler(error);
     }
   }
 
@@ -81,25 +45,7 @@ export class RoleService {
         where: { id }
       });
     } catch (error) {
-      if (error instanceof EntityNotFoundError) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.NOT_FOUND,
-            error: 'Data not found.',
-            message: cleanErrorMessage(error.message),
-          },
-          HttpStatus.NOT_FOUND,
-        );
-      } else {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: 'Internal server error.',
-            message: error.message,
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
-      }
+      CommonErrorHandler(error);
     }
   }
 
@@ -114,34 +60,7 @@ export class RoleService {
         where: { id },
       });
     } catch (error) {
-      if (error instanceof EntityNotFoundError) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.NOT_FOUND,
-            error: 'Data not found.',
-            message: cleanErrorMessage(error.message),
-          },
-          HttpStatus.NOT_FOUND,
-        );
-      } else if (error instanceof QueryFailedError) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.BAD_REQUEST,
-            error: 'Database query failed.',
-            message: error.message,
-          },
-          HttpStatus.BAD_REQUEST,
-        );
-      } else {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: 'Internal server error.',
-            message: error.message,
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
-      }
+      CommonErrorHandler(error);
     }
   }
 
@@ -154,25 +73,7 @@ export class RoleService {
 
       await this.roleRepository.softDelete(id);
     } catch (error) {
-      if (error instanceof EntityNotFoundError) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.NOT_FOUND,
-            error: 'Data not found.',
-            message: cleanErrorMessage(error.message),
-          },
-          HttpStatus.NOT_FOUND,
-        );
-      } else {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: 'Internal server error.',
-            message: error.message,
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
-      }
+      CommonErrorHandler(error);
     }
   }
 }
