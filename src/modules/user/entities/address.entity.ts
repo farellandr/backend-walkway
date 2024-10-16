@@ -21,8 +21,8 @@ export class Address {
   @Column({ type: 'varchar', length: 60 })
   district: string;
 
-  @Column({ type: 'varchar', length: 5 })
-  zipcode: string;
+  @Column({ type: 'int', width: 5 })
+  zipcode: number;
 
   @Column({ type: 'varchar', length: 255 })
   address: string;

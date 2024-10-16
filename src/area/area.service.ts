@@ -1,14 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { lastValueFrom } from 'rxjs';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AreaService {
-  private url = 'http://103.196.154.8:8765/api';
-
   constructor(
     private readonly httpService: HttpService,
+    private readonly configService: ConfigService
   ) { }
+
+  private url = this.configService.get<string>('area.url')
 
   async findProvince() {
     try {
@@ -18,7 +20,7 @@ export class AreaService {
       throw new Error(`Failed to fetch provinces: ${error.message}`);
     }
   }
-  
+
   async findCity(province: string) {
     try {
       const response = await lastValueFrom(this.httpService.get(`${this.url}/cities/${province}`));

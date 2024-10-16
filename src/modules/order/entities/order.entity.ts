@@ -8,6 +8,9 @@ export class Order {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Column({ type: 'varchar', length: 24 })
+  referenceId: string
+
   @Column({
     type: 'timestamp with time zone',
     default: () => 'CURRENT_TIMESTAMP'

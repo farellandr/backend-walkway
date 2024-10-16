@@ -26,7 +26,7 @@ export function CommonErrorHandler(error: any) {
       {
         statusCode: error?.response?.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
         error: error?.response?.error || 'Internal server error.',
-        message: error?.response?.message || 'An unexpected error occurred.',
+        message: error?.response?.message || error?.response?.data?.error || 'An unexpected error occurred.',
       },
       error?.response?.statusCode || HttpStatus.INTERNAL_SERVER_ERROR,
     );

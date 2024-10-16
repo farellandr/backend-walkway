@@ -61,6 +61,24 @@ export class ProductService {
     }
   }
 
+  async findManyProductDetail(ids: string[]) {
+    try {
+      const categories = await Promise.all(
+        ids.map(async (id) => {
+          return await this.productDetailRepository.findOneOrFail({
+            where: { id },
+            relations: {
+              product: true
+            }
+          });
+        })
+      );
+  
+      return categories;  
+    } catch (error) {
+      CommonErrorHandler(error);
+    }
+  }
 
   async findProductDetail(id: string) {
     try {
@@ -122,6 +140,7 @@ export class ProductService {
       product.price = createProductDto.price;
       product.brandId = createProductDto.brandId;
       product.categories = category;
+      product.weight = createProductDto.weight
 
       const result = await this.productRepository.insert(product);
       for (const detail of createProductDto.productDetails) {

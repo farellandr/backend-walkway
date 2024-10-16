@@ -1,5 +1,5 @@
 
-import { IsNotEmpty, IsPhoneNumber, IsString, IsUUID, Matches } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsPhoneNumber, IsString, IsUUID, Matches, Max, Min } from 'class-validator';
 
 export class UpdateAddressDto {
   @IsNotEmpty()
@@ -31,8 +31,10 @@ export class UpdateAddressDto {
   district: string;
 
   @IsNotEmpty()
-  @Matches(/^[0-9]{5}$/, { message: 'zip code must be 5 digits' })
-  zipcode: string;
+  @IsNumber({}, { message: 'Zip code must be a number' })
+  @Min(10000, { message: 'Zip code must be at least 5 digits' })
+  @Max(99999, { message: 'Zip code must be at most 5 digits' })
+  zipcode: number;
 
   @IsNotEmpty()
   @IsString()

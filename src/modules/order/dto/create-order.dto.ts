@@ -1,7 +1,24 @@
-import { IsNotEmpty, IsUUID } from "class-validator";
+import { IsArray, IsNotEmpty, IsString, IsUUID, ValidateNested } from "class-validator";
 
 export class CreateOrderDto {
   @IsNotEmpty()
   @IsUUID()
-  userId: string;
+  addressId: string;
+  
+  @IsNotEmpty()
+  @IsArray()
+  @IsUUID('4', { each: true })
+  productDetailId: string[];
+
+  @IsNotEmpty()
+  @IsString()
+  courier_company: string;
+  
+  @IsNotEmpty()
+  @IsString()
+  courier_type: string;
+  
+  @IsNotEmpty()
+  @IsString()
+  delivery_type: string;
 }

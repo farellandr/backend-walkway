@@ -13,6 +13,10 @@ export class UpdateProductDto {
   price: number;
 
   @IsNotEmpty()
+  @IsNumber()
+  weight: number;
+
+  @IsNotEmpty()
   @IsUUID()
   brandId: string;
 

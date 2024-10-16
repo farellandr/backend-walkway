@@ -34,6 +34,37 @@ export class UserService {
     private readonly roleRepository: RoleService
   ) { }
 
+  async findAddress(id: string) {
+    try {
+      return await this.addressRepository.findOneOrFail({
+        where: { id },
+        relations: {
+          user: true
+        }
+      });
+    } catch (error) {
+      if (error instanceof EntityNotFoundError) {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.NOT_FOUND,
+            error: 'Data not found.',
+            message: cleanErrorMessage(error.message),
+          },
+          HttpStatus.NOT_FOUND,
+        );
+      } else {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+            error: 'Internal server error.',
+            message: error.message,
+          },
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+    }
+  }
+
   async createAddress(createAddressDto: CreateAddressDto) {
     try {
       await this.userRepository.findOneOrFail({ where: { id: createAddressDto.userId } })
@@ -114,7 +145,6 @@ export class UserService {
     }
   }
 
-  // should be deleted
   async findCart(id: string) {
     try {
       return await this.cartRepository.findOneOrFail({
@@ -203,7 +233,10 @@ export class UserService {
   async findOne(id: string) {
     try {
       return await this.userRepository.findOneOrFail({
-        where: { id }
+        where: { id },
+        relations: {
+          addresses: true
+        }
       });
     } catch (error) {
       CommonErrorHandler(error);

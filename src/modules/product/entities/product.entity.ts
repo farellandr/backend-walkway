@@ -15,6 +15,9 @@ export class Product {
   @Column({ type: 'int' })
   price: number;
 
+  @Column({ type: 'int' })
+  weight: number;
+
   @Column({
     type: 'enum',
     enum: Status,

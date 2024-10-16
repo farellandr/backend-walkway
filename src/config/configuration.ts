@@ -12,6 +12,13 @@ export default () => {
     },
     jwt: {
       secret: process.env.JWT_SECRET || ''
+    },
+    area: {
+      url: process.env.AREA_URL || '',
+    },
+    biteship: {
+      url: process.env.BITESHIP_URL || '',
+      secret: process.env.BITESHIP_SECRET || ''
     }
   };
 };
