@@ -1,13 +1,15 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpStatus, Query, DefaultValuePipe, ParseIntPipe, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpStatus, Query, DefaultValuePipe, ParseIntPipe, ParseUUIDPipe, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { CreateCartItemDto } from './dto/create-cart-item.dto';
 import { CreateBidProductDto } from './dto/create-bid-product.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { uploadImageHelper } from '#/utils/helpers/upload-helper';
 
 @Controller('product')
 export class ProductController {
-  constructor(private readonly productService: ProductService) {}
+  constructor(private readonly productService: ProductService) { }
 
   @Post()
   async create(@Body() createProductDto: CreateProductDto) {
@@ -16,6 +18,18 @@ export class ProductController {
       statusCode: HttpStatus.CREATED,
       message: 'success'
     }
+  }
+
+  @Post('/upload/product')
+  @UseInterceptors(FileInterceptor('image', uploadImageHelper('shoes')))
+  async uploadImage(@UploadedFile() image: Express.Multer.File) {
+    if (typeof image === 'undefined') {
+      throw new BadRequestException('Flag image is not uploaded');
+    }
+
+    return {
+      flagImage: image?.filename,
+    };
   }
 
   @Post('/add-to-cart')

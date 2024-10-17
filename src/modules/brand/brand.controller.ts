@@ -1,7 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpStatus, Query, DefaultValuePipe, ParseIntPipe, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpStatus, Query, DefaultValuePipe, ParseIntPipe, ParseUUIDPipe, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
 import { BrandService } from './brand.service';
 import { CreateBrandDto } from './dto/create-brand.dto';
 import { UpdateBrandDto } from './dto/update-brand.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { uploadImageHelper } from '#/utils/helpers/upload-helper';
 
 @Controller('brand')
 export class BrandController {
@@ -14,6 +16,18 @@ export class BrandController {
       statusCode: HttpStatus.CREATED,
       message: 'success'
     }
+  }
+
+  @Post('/upload/logo')
+  @UseInterceptors(FileInterceptor('image', uploadImageHelper('brand-logo')))
+  async uploadImage(@UploadedFile() image: Express.Multer.File) {
+    if (typeof image === 'undefined') {
+      throw new BadRequestException('Flag image is not uploaded');
+    }
+
+    return {
+      flagImage: image?.filename,
+    };
   }
 
   @Get()
