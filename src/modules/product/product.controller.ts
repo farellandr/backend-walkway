@@ -48,6 +48,14 @@ export class ProductController {
       message: 'success'
     }
   }
+  @Post('/participate-bid')
+  async participateBid(@Body() body: any) {
+    return {
+      data: await this.productService.participateBid(body),
+      statusCode: HttpStatus.CREATED,
+      message: 'success'
+    }
+  }
 
   @Get()
   async findAll(@Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number, @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit?: number) {

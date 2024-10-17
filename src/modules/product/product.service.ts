@@ -13,6 +13,7 @@ import { UserService } from '../user/user.service';
 import { CreateBidProductDto } from './dto/create-bid-product.dto';
 import { BidProduct } from './entities/bid-product.entity';
 import { CommonErrorHandler } from '#/utils/helpers/error-handler';
+import { BidParticipant } from './entities/bid-participant.entity';
 
 @Injectable()
 export class ProductService {
@@ -23,10 +24,38 @@ export class ProductService {
     private readonly productDetailRepository: Repository<ProductDetail>,
     @InjectRepository(BidProduct)
     private readonly bidProductRepository: Repository<BidProduct>,
+    @InjectRepository(BidParticipant)
+    private readonly bidParticipantRepository: Repository<BidParticipant>,
     private readonly brandRepository: BrandService,
     private readonly categoryRepository: CategoryService,
     private readonly userCartRepository: UserService,
   ) { }
+
+  async participateBid(body: any) {
+    try {
+      const [bidProduct, user] = await Promise.all([
+        this.bidProductRepository.findOneOrFail({ where: { id: body.bidProductId } }),
+        this.userCartRepository.findOne(body.userId)
+      ])
+
+      const result = await this.bidParticipantRepository.insert({ bidProductId: bidProduct.id, userId: user.id, amount: body.amount })
+      return await this.bidParticipantRepository.findOneOrFail({
+        where: {
+          id: result.identifiers[0].id
+        },
+        relations: {
+          bidProduct: {
+            productDetail: {
+              product: true
+            }
+          },
+          user: true
+        }
+      });
+    } catch (error) {
+      CommonErrorHandler(error);
+    }
+  }
 
   async addToBid(createBidProductDto: CreateBidProductDto) {
     try {
@@ -73,8 +102,8 @@ export class ProductService {
           });
         })
       );
-  
-      return categories;  
+
+      return categories;
     } catch (error) {
       CommonErrorHandler(error);
     }

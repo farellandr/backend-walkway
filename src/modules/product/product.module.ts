@@ -8,10 +8,11 @@ import { ProductDetail } from './entities/product-detail.entity';
 import { CategoryModule } from '../category/category.module';
 import { UserModule } from '../user/user.module';
 import { BidProduct } from './entities/bid-product.entity';
+import { BidParticipant } from './entities/bid-participant.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Product, ProductDetail, BidProduct]),
+    TypeOrmModule.forFeature([Product, ProductDetail, BidProduct, BidParticipant]),
     BrandModule,
     CategoryModule,
     UserModule

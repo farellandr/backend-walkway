@@ -1,5 +1,6 @@
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { ProductDetail } from "./product-detail.entity";
+import { BidParticipant } from "./bid-participant.entity";
 
 @Entity()
 export class BidProduct {
@@ -24,6 +25,9 @@ export class BidProduct {
   productDetail: ProductDetail;
   @Column({ type: 'uuid' })
   productDetailId: string;
+
+  @OneToMany(() => BidParticipant, (bidParticipant) => bidParticipant.bidProduct)
+  bidParticipants: BidParticipant[];
 
   @CreateDateColumn({
     type: 'timestamp with time zone',

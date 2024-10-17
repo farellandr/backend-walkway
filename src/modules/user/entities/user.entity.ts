@@ -5,6 +5,7 @@ import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToO
 import { Cart } from "./cart.entity";
 import { Order } from "#/modules/order/entities/order.entity";
 import { Address } from "./address.entity";
+import { BidParticipant } from "#/modules/product/entities/bid-participant.entity";
 
 @Entity()
 export class User {
@@ -40,6 +41,9 @@ export class User {
 
   @OneToMany(() => Address, (address) => address.user)
   addresses: Address[];
+
+  @OneToMany(() => BidParticipant, (bidParticipant) => bidParticipant.user)
+  bidParticipants: BidParticipant[];
 
   @OneToOne(() => Cart, (cart) => cart.user)
   cart: Cart;
