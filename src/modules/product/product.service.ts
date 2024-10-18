@@ -14,6 +14,7 @@ import { CreateBidProductDto } from './dto/create-bid-product.dto';
 import { BidProduct } from './entities/bid-product.entity';
 import { CommonErrorHandler } from '#/utils/helpers/error-handler';
 import { BidParticipant } from './entities/bid-participant.entity';
+import { ProductPhoto } from './entities/product-photo.entity';
 
 @Injectable()
 export class ProductService {
@@ -22,6 +23,8 @@ export class ProductService {
     private readonly productRepository: Repository<Product>,
     @InjectRepository(ProductDetail)
     private readonly productDetailRepository: Repository<ProductDetail>,
+    @InjectRepository(ProductPhoto)
+    private readonly productPhotoRepository: Repository<ProductPhoto>,
     @InjectRepository(BidProduct)
     private readonly bidProductRepository: Repository<BidProduct>,
     @InjectRepository(BidParticipant)
@@ -172,6 +175,9 @@ export class ProductService {
       product.weight = createProductDto.weight
 
       const result = await this.productRepository.insert(product);
+      for (const imageUrl of createProductDto.productPhotos) {
+        await this.productPhotoRepository.insert({ image: imageUrl, productId: result.identifiers[0].id });
+      }
       for (const detail of createProductDto.productDetails) {
         await this.productDetailRepository.insert({ ...detail, productId: result.identifiers[0].id });
       }
@@ -185,6 +191,7 @@ export class ProductService {
           brand: true,
           categories: true,
           productDetails: true,
+          productPhotos: true
         }
       });
     } catch (error) {
@@ -203,6 +210,24 @@ export class ProductService {
           categories: true
         }
       })
+    } catch (error) {
+      CommonErrorHandler(error);
+    }
+  }
+
+  async findName(param: string) {
+    try {
+      return await this.productRepository.findOneOrFail({
+        where: {
+          name: param
+        },
+        relations: {
+          brand: true,
+          categories: true,
+          productDetails: true,
+          productPhotos: true
+        }
+      });
     } catch (error) {
       CommonErrorHandler(error);
     }

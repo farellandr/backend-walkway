@@ -3,13 +3,14 @@ import { Status } from "#/utils/enums/status.enum";
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { ProductDetail } from "./product-detail.entity";
 import { Category } from "#/modules/category/entities/category.entity";
+import { ProductPhoto } from "./product-photo.entity";
 
 @Entity()
 export class Product {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'varchar', length: 60 })
+  @Column({ type: 'varchar', length: 60, unique: true })
   name: string;
 
   @Column({ type: 'int' })
@@ -36,6 +37,9 @@ export class Product {
 
   @OneToMany(() => ProductDetail, (productDetail) => productDetail.product)
   productDetails: ProductDetail[];
+
+  @OneToMany(() => ProductPhoto, (productPhoto) => productPhoto.product)
+  productPhotos: ProductPhoto[];
 
   @CreateDateColumn({
     type: 'timestamp with time zone',

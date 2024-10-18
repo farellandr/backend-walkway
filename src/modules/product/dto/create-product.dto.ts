@@ -29,4 +29,9 @@ export class CreateProductDto {
   @ValidateNested({ each: true })
   @Type(() => CreateProductDetailDto)
   productDetails: CreateProductDetailDto[];
+
+  @IsNotEmpty()
+  @IsArray()
+  @IsString({ each: true })
+  productPhotos: string[];
 }
