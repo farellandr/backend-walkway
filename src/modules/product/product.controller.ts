@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpStatus, Query, DefaultValuePipe, ParseIntPipe, ParseUUIDPipe, UseInterceptors, UploadedFile, BadRequestException, Res } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpStatus, Query, DefaultValuePipe, ParseIntPipe, ParseUUIDPipe, UseInterceptors, UploadedFile, BadRequestException, Res, HttpException } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -23,29 +23,6 @@ export class ProductController {
     };
   }
 
-  @Get('/uploads/:image')
-  getImage(@Param('image') imagePath: string, @Res() res: any) {
-    return of(
-      res.sendFile(
-        join(process.cwd(), `/uploads/images/product-images/${imagePath}`),
-      ),
-    );
-  }
-
-  @Post('/upload-image')
-  @UseInterceptors(
-    FileInterceptor('image', uploadImageHelper('product-images')),
-  )
-  async uploadImage(@UploadedFile() image: Express.Multer.File) {
-    if (!image) {
-      throw new BadRequestException('Product image is not uploaded');
-    }
-
-    return {
-      imageUrl: image?.filename,
-    };
-  }
-
   @Post('/add-to-cart')
   async addToCart(@Body() createCartItemDto: CreateCartItemDto) {
     return {
@@ -54,6 +31,7 @@ export class ProductController {
       message: 'success',
     };
   }
+
   @Post('/add-to-bid')
   async addToBid(@Body() createBidProductDto: CreateBidProductDto) {
     return {
@@ -62,12 +40,32 @@ export class ProductController {
       message: 'success',
     };
   }
+
   @Post('/participate-bid')
   async participateBid(@Body() body: any) {
     return {
       data: await this.productService.participateBid(body),
       statusCode: HttpStatus.CREATED,
       message: 'success',
+    };
+  }
+
+  @Post('/upload')
+  @UseInterceptors(FileInterceptor('image', uploadImageHelper('product-images')))
+  async uploadImage(@UploadedFile() image: Express.Multer.File) {
+    if (!image) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.BAD_REQUEST,
+          error: 'Bad Request.',
+          message: 'An error occurred while uploading image.',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    return {
+      imageUrl: image?.filename,
     };
   }
 
@@ -85,18 +83,22 @@ export class ProductController {
     };
   }
 
-  @Get(':param')
-  async findName(@Param('param') param: string) {
-    const formattedName = capitalizeWords(param.replace(/-/g, ' '));
+  @Get('/uploads/:image')
+  getImage(@Param('image') imagePath: string, @Res() res: any) {
+    return of(
+      res.sendFile(
+        join(process.cwd(), `/uploads/images/product-images/${imagePath}`),
+      ),
+    );
+  }
+
+  @Get(':name')
+  async findName(@Param('name') name: string) {
+    const formattedName = capitalizeWords(name.replace(/-/g, ' '));
 
     const product = await this.productService.findName(formattedName);
-
-    const productImages = product.productPhotos.map((photo) => {
-      return `http://localhost:3222/product/uploads/${photo.image}`;
-    });
-
     return {
-      data: { ...product, productImages },
+      data: { ...product, productPhotos: product.productPhotos.map(photo => photo.image) },
       statusCode: HttpStatus.OK,
       message: 'success',
     };

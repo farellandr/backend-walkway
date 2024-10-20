@@ -29,6 +29,15 @@ export class BrandService {
     })
   }
 
+  async findName(name: string) {
+    return await this.brandRepository.findOneOrFail({
+      where: { name },
+      relations: {
+        products: true
+      }
+    });
+  }
+
   async findOne(id: string) {
     return await this.brandRepository.findOneOrFail({
       where: { id }

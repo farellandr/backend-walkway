@@ -6,7 +6,7 @@ export class ProductPhoto {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({type: 'varchar'})
+  @Column({ type: 'varchar' })
   image: string;
 
   @ManyToOne(() => Product, (product) => product.productPhotos)
