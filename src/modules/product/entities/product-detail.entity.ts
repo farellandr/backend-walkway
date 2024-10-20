@@ -1,5 +1,5 @@
 import { CartItem } from "#/modules/user/entities/cart-item.entity";
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Product } from "./product.entity";
 import { BidProduct } from "./bid-product.entity";
 import { Status } from "#/utils/enums/status.enum";

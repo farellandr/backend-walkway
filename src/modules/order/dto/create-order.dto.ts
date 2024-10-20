@@ -1,4 +1,4 @@
-import { IsArray, IsNotEmpty, IsString, IsUUID, ValidateNested } from "class-validator";
+import { IsArray, IsNotEmpty, IsString, IsUUID } from "class-validator";
 
 export class CreateOrderDto {
   @IsNotEmpty()

@@ -1,11 +1,9 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Category } from './entities/category.entity';
-import { EntityNotFoundError, QueryFailedError, Repository } from 'typeorm';
-import { cleanErrorMessage } from '#/utils/helpers/clean-error-message';
-import { CommonErrorHandler } from '#/utils/helpers/error-handler';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class CategoryService {
@@ -15,81 +13,54 @@ export class CategoryService {
   ) { }
 
   async create(createCategoryDto: CreateCategoryDto) {
-    try {
-      const result = await this.categoryrepository.insert(createCategoryDto);
+    const result = await this.categoryrepository.insert(createCategoryDto);
 
-      return await this.categoryrepository.findOneOrFail({
-        where: {
-          id: result.identifiers[0].id
-        }
-      });
-    } catch (error) {
-      CommonErrorHandler(error);
-    }
+    return await this.categoryrepository.findOneOrFail({
+      where: {
+        id: result.identifiers[0].id
+      }
+    });
   }
 
   async findAll(page: number = 1, limit: number = 10) {
-    try {
-      return await this.categoryrepository.findAndCount({
-        skip: (page - 1) * limit,
-        take: limit
-      })
-    } catch (error) {
-      CommonErrorHandler(error);
-    }
+    return await this.categoryrepository.findAndCount({
+      skip: (page - 1) * limit,
+      take: limit
+    });
   }
 
   async findOne(id: string) {
-    try {
-      return await this.categoryrepository.findOneOrFail({
-        where: { id }
-      });
-    } catch (error) {
-      CommonErrorHandler(error);
-    }
+    return await this.categoryrepository.findOneOrFail({
+      where: { id }
+    });
   }
 
   async findMany(ids: string[]) {
-    try {
-      const categories = await Promise.all(
-        ids.map(async (id) => {
-          return await this.categoryrepository.findOneOrFail({
-            where: { id }
-          });
-        })
-      );
-  
-      return categories;  
-    } catch (error) {
-      CommonErrorHandler(error);
-    }
+    return await Promise.all(
+      ids.map(async (id) => {
+        return await this.categoryrepository.findOneOrFail({
+          where: { id }
+        });
+      })
+    );
   }
 
   async update(id: string, updateCategoryDto: UpdateCategoryDto) {
-    try {
-      await this.categoryrepository.findOneOrFail({
-        where: { id },
-      });
+    await this.categoryrepository.findOneOrFail({
+      where: { id },
+    });
 
-      await this.categoryrepository.update(id, updateCategoryDto);
-      return await this.categoryrepository.findOneOrFail({
-        where: { id },
-      });
-    } catch (error) {
-      CommonErrorHandler(error);
-    }
+    await this.categoryrepository.update(id, updateCategoryDto);
+    return await this.categoryrepository.findOneOrFail({
+      where: { id },
+    });
   }
 
-
   async remove(id: string) {
-    try {
-      await this.categoryrepository.findOneOrFail({
-        where: { id },
-      });
+    await this.categoryrepository.findOneOrFail({
+      where: { id },
+    });
 
-      await this.categoryrepository.softDelete(id);
-    } catch (error) {
-      CommonErrorHandler(error);
-    }
+    await this.categoryrepository.softDelete(id);
   }
 }

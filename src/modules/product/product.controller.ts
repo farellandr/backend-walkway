@@ -1,21 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  HttpStatus,
-  Query,
-  DefaultValuePipe,
-  ParseIntPipe,
-  ParseUUIDPipe,
-  UseInterceptors,
-  UploadedFile,
-  BadRequestException,
-  Res,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpStatus, Query, DefaultValuePipe, ParseIntPipe, ParseUUIDPipe, UseInterceptors, UploadedFile, BadRequestException, Res } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -29,7 +12,7 @@ import { join } from 'path';
 
 @Controller('product')
 export class ProductController {
-  constructor(private readonly productService: ProductService) {}
+  constructor(private readonly productService: ProductService) { }
 
   @Post()
   async create(@Body() createProductDto: CreateProductDto) {
@@ -113,7 +96,7 @@ export class ProductController {
     });
 
     return {
-      data: {...product, productImages},
+      data: { ...product, productImages },
       statusCode: HttpStatus.OK,
       message: 'success',
     };

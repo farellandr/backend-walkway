@@ -6,6 +6,7 @@ import { Logger } from 'nestjs-pino';
 import { CorrelationIdMiddleware } from './utils/middlewares/correlation-id.middleware';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { ExceptionsFilter } from './utils/helpers/exception-filter';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -16,6 +17,7 @@ async function bootstrap() {
   app.use(CorrelationIdMiddleware());
   app.useLogger(logger);
   app.enableCors();
+  app.useGlobalFilters(new ExceptionsFilter())
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,

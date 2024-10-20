@@ -7,7 +7,7 @@ export class Brand {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'varchar', length: 60 })
+  @Column({ type: 'varchar', length: 60, unique: true })
   name: string;
 
   @Column({ type: 'text' })
