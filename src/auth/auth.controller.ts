@@ -5,7 +5,7 @@ import { RegisterDto } from './dto/register.dto';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   @Post('/login')
   async login(@Body() loginDto: LoginDto) {
@@ -17,5 +17,13 @@ export class AuthController {
     };
   }
 
-
+  @Post('/register')
+  async register(@Body() registerDto: RegisterDto) {
+    const user = await this.authService.register(registerDto);
+    return {
+      data: await this.authService.login(user),
+      statusCode: HttpStatus.OK,
+      message: 'success',
+    };
+  }
 }

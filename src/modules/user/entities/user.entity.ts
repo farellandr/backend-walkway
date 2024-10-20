@@ -45,10 +45,10 @@ export class User {
   @OneToMany(() => BidParticipant, (bidParticipant) => bidParticipant.user)
   bidParticipants: BidParticipant[];
 
-  @OneToOne(() => Cart, (cart) => cart.user)
+  @OneToOne(() => Cart, (cart) => cart.user, { nullable: true })
   cart: Cart;
 
-  @OneToMany(() => Order, (order) => order.user)
+  @OneToMany(() => Order, (order) => order.user, { nullable: true })
   orders: Order[];
 
   @OneToMany(() => Payment, (payment) => payment.user)

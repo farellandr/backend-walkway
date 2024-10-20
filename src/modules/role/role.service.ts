@@ -12,7 +12,7 @@ export class RoleService {
   constructor(
     @InjectRepository(Role)
     private readonly roleRepository: Repository<Role>
-  ) {}
+  ) { }
 
   async create(createRoleDto: CreateRoleDto) {
     try {
@@ -34,6 +34,16 @@ export class RoleService {
         skip: (page - 1) * limit,
         take: limit
       })
+    } catch (error) {
+      CommonErrorHandler(error);
+    }
+  }
+
+  async findByName(name: string) {
+    try {
+      return await this.roleRepository.findOneOrFail({
+        where: { name }
+      });
     } catch (error) {
       CommonErrorHandler(error);
     }

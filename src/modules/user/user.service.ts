@@ -111,7 +111,7 @@ export class UserService {
 
   async findEmail(email: string) {
     try {
-      return await this.userRepository.findOneOrFail({
+      return await this.userRepository.findOne({
         where: { email }
       });
     } catch (error) {
@@ -173,6 +173,20 @@ export class UserService {
     }
   }
 
+  async createCart(userId: string) {
+    try {
+      const result = await this.cartRepository.insert({ userId: userId });
+
+      return await this.cartRepository.findOneOrFail({
+        where: {
+          id: result.identifiers[0].id
+        }
+      });
+    } catch (error) {
+      CommonErrorHandler(error);
+    }
+  }
+
   async create(createUserDto: CreateUserDto) {
     try {
       const user = new User;
@@ -203,7 +217,7 @@ export class UserService {
       user.password = await bcrypt.hash(createUserDto.password, user.salt);
 
       const result = await this.userRepository.insert(user);
-      await this.cartRepository.insert({ userId: result.identifiers[0].id });
+      // await this.cartRepository.insert({ userId: result.identifiers[0].id });
 
       return await this.userRepository.findOneOrFail({
         where: {
