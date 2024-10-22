@@ -1,4 +1,22 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpStatus, Query, DefaultValuePipe, ParseIntPipe, ParseUUIDPipe, UseInterceptors, UploadedFile, BadRequestException, Res, HttpException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  HttpStatus,
+  Query,
+  DefaultValuePipe,
+  ParseIntPipe,
+  ParseUUIDPipe,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
+  Res,
+  HttpException,
+} from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -9,10 +27,11 @@ import { uploadImageHelper } from '#/utils/helpers/upload-helper';
 import { capitalizeWords } from '#/utils/helpers/capitalizer';
 import { of } from 'rxjs';
 import { join } from 'path';
+import { PhotoType } from '#/utils/enums/photo-types.enum';
 
 @Controller('product')
 export class ProductController {
-  constructor(private readonly productService: ProductService) { }
+  constructor(private readonly productService: ProductService) {}
 
   @Post()
   async create(@Body() createProductDto: CreateProductDto) {
@@ -51,7 +70,9 @@ export class ProductController {
   }
 
   @Post('/upload')
-  @UseInterceptors(FileInterceptor('image', uploadImageHelper('product-images')))
+  @UseInterceptors(
+    FileInterceptor('image', uploadImageHelper('product-images')),
+  )
   async uploadImage(@UploadedFile() image: Express.Multer.File) {
     if (!image) {
       throw new HttpException(
@@ -83,6 +104,51 @@ export class ProductController {
     };
   }
 
+  @Get('/bids')
+  async findBids() {
+    const bids = await this.productService.findProductBids();
+
+    const formattedBids = bids.map((bid) => {
+      const product = bid.productDetail.product;
+      const frontPhoto = product.productPhotos.find(
+        (photo) => photo.photoType === PhotoType.FRONT,
+      )?.image;
+
+      return {
+        ...bid,
+        productPhotos: frontPhoto
+          ? `http://localhost:3222/product/uploads/${frontPhoto}`
+          : null,
+      };
+    });
+
+    return {
+      data: formattedBids,
+      statusCode: HttpStatus.OK,
+      message: 'success',
+    };
+  }
+
+  @Get('/newest')
+  async findNewest() {
+    const products = await this.productService.findNewest();
+
+    const formattedProducts = products.map((product) => ({
+      ...product,
+      productPhotos:
+        'http://localhost:3222/product/uploads/' +
+        product.productPhotos.find(
+          (photo) => photo.photoType === PhotoType.FRONT,
+        )?.image,
+    }));
+
+    return {
+      data: formattedProducts,
+      statusCode: HttpStatus.OK,
+      message: 'success',
+    };
+  }
+
   @Get('/uploads/:image')
   getImage(@Param('image') imagePath: string, @Res() res: any) {
     return of(
@@ -98,7 +164,10 @@ export class ProductController {
 
     const product = await this.productService.findName(formattedName);
     return {
-      data: { ...product, productPhotos: product.productPhotos.map(photo => photo.image) },
+      data: {
+        ...product,
+        productPhotos: product.productPhotos.map((photo) => photo.image),
+      },
       statusCode: HttpStatus.OK,
       message: 'success',
     };

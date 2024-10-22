@@ -3,7 +3,7 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './entities/product.entity';
-import { Repository } from 'typeorm';
+import { Between, Repository } from 'typeorm';
 import { BrandService } from '../brand/brand.service';
 import { ProductDetail } from './entities/product-detail.entity';
 import { CategoryService } from '../category/category.service';
@@ -13,6 +13,7 @@ import { CreateBidProductDto } from './dto/create-bid-product.dto';
 import { BidProduct } from './entities/bid-product.entity';
 import { BidParticipant } from './entities/bid-participant.entity';
 import { ProductPhoto } from './entities/product-photo.entity';
+import { PhotoType } from '#/utils/enums/photo-types.enum';
 
 @Injectable()
 export class ProductService {
@@ -30,35 +31,46 @@ export class ProductService {
     private readonly brandRepository: BrandService,
     private readonly categoryRepository: CategoryService,
     private readonly userCartRepository: UserService,
-  ) { }
+  ) {}
 
   async participateBid(body: any) {
     const [bidProduct, user] = await Promise.all([
-      this.bidProductRepository.findOneOrFail({ where: { id: body.bidProductId } }),
-      this.userCartRepository.findOne(body.userId)
-    ])
+      this.bidProductRepository.findOneOrFail({
+        where: { id: body.bidProductId },
+      }),
+      this.userCartRepository.findOne(body.userId),
+    ]);
 
-    const result = await this.bidParticipantRepository.insert({ bidProductId: bidProduct.id, userId: user.id, amount: body.amount })
+    const result = await this.bidParticipantRepository.insert({
+      bidProductId: bidProduct.id,
+      userId: user.id,
+      amount: body.amount,
+    });
     return await this.bidParticipantRepository.findOneOrFail({
       where: {
-        id: result.identifiers[0].id
+        id: result.identifiers[0].id,
       },
       relations: {
         bidProduct: {
           productDetail: {
-            product: true
-          }
+            product: true,
+          },
         },
-        user: true
-      }
+        user: true,
+      },
     });
   }
 
   async addToBid(createBidProductDto: CreateBidProductDto) {
-    const productDetail = await this.findProductDetail(createBidProductDto.productDetailId);
+    const productDetail = await this.findProductDetail(
+      createBidProductDto.productDetailId,
+    );
 
     if (productDetail.stock - 1 >= 0) {
-      await this.productDetailRepository.save({ ...productDetail, stock: productDetail.stock - 1 })
+      await this.productDetailRepository.save({
+        ...productDetail,
+        stock: productDetail.stock - 1,
+      });
     } else {
       throw new HttpException(
         {
@@ -70,16 +82,16 @@ export class ProductService {
       );
     }
 
-    const result = await this.bidProductRepository.insert(createBidProductDto)
+    const result = await this.bidProductRepository.insert(createBidProductDto);
     return await this.bidProductRepository.findOneOrFail({
       where: {
-        id: result.identifiers[0].id
+        id: result.identifiers[0].id,
       },
       relations: {
         productDetail: {
-          product: true
-        }
-      }
+          product: true,
+        },
+      },
     });
   }
 
@@ -89,29 +101,44 @@ export class ProductService {
         return await this.productDetailRepository.findOneOrFail({
           where: { id },
           relations: {
-            product: true
-          }
+            product: true,
+          },
         });
-      })
+      }),
     );
 
     return categories;
   }
 
+  async findProductBids() {
+    return await this.bidProductRepository.find({
+      relations: {
+        productDetail: {
+          product: {
+            productPhotos: true
+          }
+        }
+      }
+    });
+  }
+
   async findProductDetail(id: string) {
     return await this.productDetailRepository.findOneOrFail({
-      where: { id }
+      where: { id },
     });
   }
 
   async addToCart(createCartItemDto: CreateCartItemDto) {
     const [productDetail, cart] = await Promise.all([
       this.findProductDetail(createCartItemDto.productDetailId),
-      this.userCartRepository.findCart(createCartItemDto.cartId)
-    ])
+      this.userCartRepository.findCart(createCartItemDto.cartId),
+    ]);
 
     if (productDetail.stock - 1 >= 0) {
-      await this.productDetailRepository.save({ ...productDetail, stock: productDetail.stock - 1 })
+      await this.productDetailRepository.save({
+        ...productDetail,
+        stock: productDetail.stock - 1,
+      });
     } else {
       throw new HttpException(
         {
@@ -123,16 +150,18 @@ export class ProductService {
       );
     }
 
-    return await this.userCartRepository.createCartItem(createCartItemDto)
+    return await this.userCartRepository.createCartItem(createCartItemDto);
   }
 
   async create(createProductDto: CreateProductDto) {
     const [brand, category] = await Promise.all([
       this.brandRepository.findOne(createProductDto.brandId),
-      this.categoryRepository.findMany(createProductDto.categoryId)
-    ])
-    const sizes = createProductDto.productDetails.map(detail => detail.size);
-    const hasDuplicate = sizes.some((size, index) => sizes.indexOf(size) !== index);
+      this.categoryRepository.findMany(createProductDto.categoryId),
+    ]);
+    const sizes = createProductDto.productDetails.map((detail) => detail.size);
+    const hasDuplicate = sizes.some(
+      (size, index) => sizes.indexOf(size) !== index,
+    );
     if (hasDuplicate) {
       throw new HttpException(
         {
@@ -144,32 +173,82 @@ export class ProductService {
       );
     }
 
-    const product = new Product;
+    const product = new Product();
     product.name = brand.name + ' ' + createProductDto.name;
     product.price = createProductDto.price;
     product.brandId = createProductDto.brandId;
     product.categories = category;
-    product.weight = createProductDto.weight
+    product.weight = createProductDto.weight;
 
     const result = await this.productRepository.insert(product);
-    for (const imageUrl of createProductDto.productPhotos) {
-      await this.productPhotoRepository.insert({ image: imageUrl, productId: result.identifiers[0].id });
+
+    for (const [type, photos] of Object.entries(createProductDto.productPhotos)) {
+      if (Array.isArray(photos)) {
+        for (const photoUrl of photos) {
+          await this.productPhotoRepository.insert({
+            image: photoUrl,
+            photoType: PhotoType.SIDE,
+            productId: result.identifiers[0].id,
+          });
+        }
+      } else {
+        await this.productPhotoRepository.insert({
+          image: photos,
+          photoType: type === 'front' ? PhotoType.FRONT : PhotoType.BOTTOM,
+          productId: result.identifiers[0].id,
+        });
+      }
     }
+    
     for (const detail of createProductDto.productDetails) {
-      await this.productDetailRepository.insert({ ...detail, productId: result.identifiers[0].id });
+      await this.productDetailRepository.insert({
+        ...detail,
+        productId: result.identifiers[0].id,
+      });
     }
 
-    await this.productRepository.save(product)
+    await this.productRepository.save(product);
     return await this.productRepository.findOneOrFail({
       where: {
-        id: result.identifiers[0].id
+        id: result.identifiers[0].id,
       },
       relations: {
         brand: true,
         categories: true,
         productDetails: true,
-        productPhotos: true
-      }
+        productPhotos: true,
+      },
+    });
+  }
+
+  
+
+  async findNewest() {
+    const currentDate = new Date();
+    const firstDayOfMonth = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      1,
+    );
+    const lastDayOfMonth = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth() + 1,
+      0,
+      23,
+      59,
+      59,
+    );
+
+    return await this.productRepository.find({
+      where: {
+        createdAt: Between(firstDayOfMonth, lastDayOfMonth),
+      },
+      relations: {
+        brand: true,
+        categories: true,
+        productDetails: true,
+        productPhotos: true,
+      },
     });
   }
 
@@ -180,35 +259,35 @@ export class ProductService {
       relations: {
         brand: true,
         productDetails: true,
-        categories: true
-      }
-    })
+        categories: true,
+      },
+    });
   }
 
   async findName(param: string) {
     return await this.productRepository.findOneOrFail({
       where: {
-        name: param
+        name: param,
       },
       relations: {
         brand: true,
         categories: true,
         productDetails: true,
-        productPhotos: true
-      }
+        productPhotos: true,
+      },
     });
   }
 
   async findOne(id: string) {
     return await this.productRepository.findOneOrFail({
       where: {
-        id
+        id,
       },
       relations: {
         brand: true,
         categories: true,
         productDetails: true,
-      }
+      },
     });
   }
 
@@ -217,42 +296,50 @@ export class ProductService {
       where: { id },
       relations: {
         productDetails: true,
-        brand: true
-      }
+        brand: true,
+      },
     });
 
-    const { categoryId, productDetails, ...updateProductData } = updateProductDto;
+    const { categoryId, productDetails, ...updateProductData } =
+      updateProductDto;
 
     Object.assign(product, updateProductData);
 
     const [brand, category] = await Promise.all([
       this.brandRepository.findOne(updateProductDto.brandId),
-      this.categoryRepository.findMany(categoryId)
+      this.categoryRepository.findMany(categoryId),
     ]);
     product.name = brand.name + ' ' + product.name;
     product.categories = category;
 
-    await this.productRepository.save(product)
+    await this.productRepository.save(product);
 
     for (const detail of productDetails) {
-      const existingDetail = product.productDetails.find((d) => d.size === detail.size);
+      const existingDetail = product.productDetails.find(
+        (d) => d.size === detail.size,
+      );
 
       if (existingDetail) {
         existingDetail.stock = detail.stock;
-        await this.productDetailRepository.update(existingDetail.id, { stock: detail.stock });
+        await this.productDetailRepository.update(existingDetail.id, {
+          stock: detail.stock,
+        });
       } else {
-        await this.productDetailRepository.insert({ ...detail, productId: product.id })
+        await this.productDetailRepository.insert({
+          ...detail,
+          productId: product.id,
+        });
       }
     }
     return await this.productRepository.findOneOrFail({
       where: {
-        id
+        id,
       },
       relations: {
         brand: true,
         categories: true,
-        productDetails: true
-      }
+        productDetails: true,
+      },
     });
   }
 

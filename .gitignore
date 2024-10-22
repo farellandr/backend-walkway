@@ -36,4 +36,7 @@ lerna-debug.log*
 
 .env
 
+product-images/
+brand-logos/
+
 k8s/**/secret.yaml

@@ -1,6 +1,29 @@
-import { IsArray, IsNotEmpty, IsNumber, IsString, IsUUID, ValidateNested } from "class-validator";
-import { CreateProductDetailDto } from "./create-product-detail.dto";
-import { Type } from "class-transformer";
+import {
+  IsArray,
+  IsNotEmpty,
+  IsNumber,
+  IsObject,
+  IsString,
+  IsUUID,
+  ValidateNested,
+} from 'class-validator';
+import { CreateProductDetailDto } from './create-product-detail.dto';
+import { Type } from 'class-transformer';
+
+class ProductPhotosDto {
+  @IsNotEmpty()
+  @IsString()
+  front: string;
+
+  @IsNotEmpty()
+  @IsArray()
+  @IsString({ each: true })
+  side: string[];
+
+  @IsNotEmpty()
+  @IsString()
+  bottom: string;
+}
 
 export class CreateProductDto {
   @IsNotEmpty()
@@ -14,7 +37,7 @@ export class CreateProductDto {
   @IsNotEmpty()
   @IsNumber()
   weight: number;
-  
+
   @IsNotEmpty()
   @IsUUID()
   brandId: string;
@@ -31,7 +54,12 @@ export class CreateProductDto {
   productDetails: CreateProductDetailDto[];
 
   @IsNotEmpty()
-  @IsArray()
-  @IsString({ each: true })
-  productPhotos: string[];
+  @ValidateNested()
+  @Type(() => ProductPhotosDto)
+  productPhotos: ProductPhotosDto;
+
+  // @IsNotEmpty()
+  // @IsArray()
+  // @IsString({ each: true })
+  // productPhotos: string[];
 }

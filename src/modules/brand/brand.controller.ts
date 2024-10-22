@@ -1,4 +1,22 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpStatus, Query, DefaultValuePipe, ParseIntPipe, ParseUUIDPipe, UseInterceptors, UploadedFile, BadRequestException, Res, HttpException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  HttpStatus,
+  Query,
+  DefaultValuePipe,
+  ParseIntPipe,
+  ParseUUIDPipe,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
+  Res,
+  HttpException,
+} from '@nestjs/common';
 import { BrandService } from './brand.service';
 import { CreateBrandDto } from './dto/create-brand.dto';
 import { UpdateBrandDto } from './dto/update-brand.dto';
@@ -10,15 +28,15 @@ import { capitalizeWords } from '#/utils/helpers/capitalizer';
 
 @Controller('brand')
 export class BrandController {
-  constructor(private readonly brandService: BrandService) { }
+  constructor(private readonly brandService: BrandService) {}
 
   @Post()
   async create(@Body() createBrandDto: CreateBrandDto) {
     return {
       data: await this.brandService.create(createBrandDto),
       statusCode: HttpStatus.CREATED,
-      message: 'success'
-    }
+      message: 'success',
+    };
   }
 
   @Post('/upload')
@@ -41,16 +59,34 @@ export class BrandController {
   }
 
   @Get()
-  async findAll(@Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number, @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit?: number) {
+  async findAll(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit?: number,
+  ) {
     return {
-      page, limit,
+      page,
+      limit,
       data: await this.brandService.findAll(page, limit),
       statusCode: HttpStatus.OK,
-      message: 'success'
-    }
+      message: 'success',
+    };
   }
 
-  
+  @Get('/recent')
+  async findMany() {
+    const brands = await this.brandService.findMany();
+
+    const formattedBrands = brands.map((brand) => ({
+      ...brand,
+      image: `http://localhost:3222/brand/uploads/${brand.image}`,
+    }));
+    return {
+      data: formattedBrands,
+      statusCode: HttpStatus.OK,
+      message: 'success',
+    };
+  }
+
   @Get('/uploads/:image')
   getImage(@Param('image') imagePath: string, @Res() res: any) {
     return of(
@@ -80,7 +116,10 @@ export class BrandController {
   }
 
   @Patch(':id')
-  async update(@Param('id', ParseUUIDPipe) id: string, @Body() updateBrandDto: UpdateBrandDto) {
+  async update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateBrandDto: UpdateBrandDto,
+  ) {
     return {
       data: await this.brandService.update(id, updateBrandDto),
       statusCode: HttpStatus.OK,

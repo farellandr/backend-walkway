@@ -1,5 +1,14 @@
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { Product } from './product.entity';
+import { PhotoType } from '#/utils/enums/photo-types.enum';
 
 @Entity()
 export class ProductPhoto {
@@ -8,6 +17,12 @@ export class ProductPhoto {
 
   @Column({ type: 'varchar' })
   image: string;
+
+  @Column({
+    type: 'enum',
+    enum: PhotoType,
+  })
+  photoType: PhotoType;
 
   @ManyToOne(() => Product, (product) => product.productPhotos)
   product: Product;
