@@ -119,6 +119,7 @@ export class ProductController {
         productPhotos: frontPhoto
           ? `http://localhost:3222/product/uploads/${frontPhoto}`
           : null,
+        productName: product.name
       };
     });
 

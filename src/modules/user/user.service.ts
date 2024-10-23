@@ -4,7 +4,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
-import * as bcrypt from 'bcrypt'
+import * as bcrypt from 'bcrypt';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { RoleService } from '../role/role.service';
 import { Cart } from './entities/cart.entity';
@@ -29,39 +29,43 @@ export class UserService {
     @InjectRepository(ProductDetail)
     private readonly productDetailRepository: Repository<ProductDetail>,
 
-    private readonly roleRepository: RoleService
-  ) { }
+    private readonly roleRepository: RoleService,
+  ) {}
 
   async findAddress(id: string) {
     return await this.addressRepository.findOneOrFail({
       where: { id },
       relations: {
-        user: true
-      }
+        user: true,
+      },
     });
   }
 
   async createAddress(createAddressDto: CreateAddressDto) {
-    await this.userRepository.findOneOrFail({ where: { id: createAddressDto.userId } })
+    await this.userRepository.findOneOrFail({
+      where: { id: createAddressDto.userId },
+    });
 
     const result = await this.addressRepository.insert(createAddressDto);
     return await this.addressRepository.findOneOrFail({
       where: {
-        id: result.identifiers[0].id
-      }
+        id: result.identifiers[0].id,
+      },
     });
   }
 
   async updateAddress(updateAddressDto: UpdateAddressDto) {
     const { addressId, ...addressData } = updateAddressDto;
-    await this.userRepository.findOneOrFail({ where: { id: addressData.userId } })
-    await this.addressRepository.findOneOrFail({ where: { id: addressId } })
+    await this.userRepository.findOneOrFail({
+      where: { id: addressData.userId },
+    });
+    await this.addressRepository.findOneOrFail({ where: { id: addressId } });
 
-    await this.addressRepository.update(addressId, addressData)
+    await this.addressRepository.update(addressId, addressData);
     return await this.addressRepository.findOneOrFail({
       where: {
-        id: addressId
-      }
+        id: addressId,
+      },
     });
   }
 
@@ -78,38 +82,41 @@ export class UserService {
       where: { email },
       relations: {
         role: true,
-        cart: true
-      }
+        cart: true,
+      },
     });
   }
 
   async createCartItem(createCartItemDto: CreateCartItemDto) {
     await Promise.all([
-      this.cartRepository.findOneOrFail({ where: { id: createCartItemDto.cartId } }),
-      this.productDetailRepository.findOneOrFail({ where: { id: createCartItemDto.productDetailId } })
-    ])
+      this.cartRepository.findOneOrFail({
+        where: { id: createCartItemDto.cartId },
+      }),
+      this.productDetailRepository.findOneOrFail({
+        where: { id: createCartItemDto.productDetailId },
+      }),
+    ]);
 
-    const result = await this.cartItemRepository.insert(createCartItemDto)
+    const result = await this.cartItemRepository.insert(createCartItemDto);
     return await this.cartItemRepository.findOneOrFail({
       where: {
-        id: result.identifiers[0].id
+        id: result.identifiers[0].id,
       },
       relations: {
         productDetail: {
           product: true,
         },
         cart: {
-          user: true
+          user: true,
         },
-      }
+      },
     });
   }
 
   async findCart(id: string) {
     return await this.cartRepository.findOneOrFail({
-      where: { id }
+      where: { id },
     });
-
   }
 
   async createCart(userId: string) {
@@ -117,23 +124,34 @@ export class UserService {
 
     return await this.cartRepository.findOneOrFail({
       where: {
-        id: result.identifiers[0].id
-      }
+        id: result.identifiers[0].id,
+      },
+    });
+  }
+
+  async register(user: CreateUserDto) {
+    const result = await this.userRepository.insert(user);
+    await this.cartRepository.insert({ userId: result.identifiers[0].id });
+
+    return await this.userRepository.findOneOrFail({
+      where: {
+        id: result.identifiers[0].id,
+      },
     });
   }
 
   async create(createUserDto: CreateUserDto) {
-    const user = new User;
+    const user = new User();
     user.name = createUserDto.name;
     user.phone_number = createUserDto.phone_number;
 
-    await this.roleRepository.findOne(createUserDto.roleId)
+    await this.roleRepository.findOne(createUserDto.roleId);
     user.roleId = createUserDto.roleId;
 
     const isEmailExist = await this.userRepository.findOne({
       where: {
-        email: createUserDto.email
-      }
+        email: createUserDto.email,
+      },
     });
     if (isEmailExist) {
       throw new HttpException(
@@ -151,11 +169,10 @@ export class UserService {
     user.password = await bcrypt.hash(createUserDto.password, user.salt);
 
     const result = await this.userRepository.insert(user);
-    // await this.cartRepository.insert({ userId: result.identifiers[0].id });
 
     return await this.userRepository.findOneOrFail({
       where: {
-        id: result.identifiers[0].id
+        id: result.identifiers[0].id,
       },
     });
   }
@@ -167,16 +184,17 @@ export class UserService {
       take: limit,
       relations: {
         role: true,
-      }
-    })
+      },
+    });
   }
 
   async findOne(id: string) {
     return await this.userRepository.findOneOrFail({
       where: { id },
       relations: {
-        addresses: true
-      }
+        addresses: true,
+        role: true,
+      },
     });
   }
 
@@ -196,7 +214,10 @@ export class UserService {
       where: { id },
     });
 
-    const isPasswordNew = await bcrypt.compare(updatePasswordDto.password, user.password)
+    const isPasswordNew = await bcrypt.compare(
+      updatePasswordDto.password,
+      user.password,
+    );
     if (isPasswordNew) {
       throw new HttpException(
         {
@@ -207,7 +228,10 @@ export class UserService {
         HttpStatus.BAD_REQUEST,
       );
     }
-    updatePasswordDto.password = await bcrypt.hash(updatePasswordDto.password, user.salt)
+    updatePasswordDto.password = await bcrypt.hash(
+      updatePasswordDto.password,
+      user.salt,
+    );
 
     await this.userRepository.update(id, updatePasswordDto);
     return await this.userRepository.findOneOrFail({

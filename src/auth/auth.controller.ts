@@ -1,11 +1,11 @@
-import { Controller, Post, Body, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, HttpStatus, Get, Param } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) { }
+  constructor(private readonly authService: AuthService) {}
 
   @Post('/login')
   async login(@Body() loginDto: LoginDto) {
@@ -22,6 +22,15 @@ export class AuthController {
     const user = await this.authService.register(registerDto);
     return {
       data: await this.authService.login(user),
+      statusCode: HttpStatus.OK,
+      message: 'success',
+    };
+  }
+
+  @Get('/user/:token')
+  async getUserByToken(@Param('token') token: string) {
+    return {
+      data: await this.authService.getUserByToken(token),
       statusCode: HttpStatus.OK,
       message: 'success',
     };
