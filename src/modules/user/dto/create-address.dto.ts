@@ -1,9 +1,19 @@
-import { IsNotEmpty, IsNumber, IsPhoneNumber, IsString, IsUUID, Max, Min } from "class-validator";
+import {
+  IsEmail,
+  IsOptional,
+  IsNotEmpty,
+  IsNumber,
+  IsPhoneNumber,
+  IsString,
+  IsUUID,
+  Max,
+  Min,
+} from 'class-validator';
 
 export class CreateAddressDto {
   @IsNotEmpty()
-  @IsUUID()
-  userId: string;
+  @IsEmail()
+  email: string;
 
   @IsNotEmpty()
   @IsString()
@@ -37,6 +47,6 @@ export class CreateAddressDto {
   address: string;
 
   @IsNotEmpty()
-  @IsString()
+  @IsOptional()
   note: string;
 }

@@ -27,8 +27,8 @@ export class Address {
   @Column({ type: 'varchar', length: 255 })
   address: string;
 
-  @Column({ type: 'varchar', length: 60 })
-  note: string;
+  @Column({ type: 'varchar', length: 60, nullable: true })
+  note?: string;
 
   @ManyToOne(() => User, (user) => user.addresses)
   user: User;

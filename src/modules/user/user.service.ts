@@ -42,11 +42,11 @@ export class UserService {
   }
 
   async createAddress(createAddressDto: CreateAddressDto) {
-    await this.userRepository.findOneOrFail({
-      where: { id: createAddressDto.userId },
+    const user = await this.userRepository.findOneOrFail({
+      where: { email: createAddressDto.email },
     });
 
-    const result = await this.addressRepository.insert(createAddressDto);
+    const result = await this.addressRepository.insert({...createAddressDto, userId: user.id});
     return await this.addressRepository.findOneOrFail({
       where: {
         id: result.identifiers[0].id,
