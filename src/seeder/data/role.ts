@@ -1,5 +1,5 @@
 import { Role } from "#/modules/role/entities/role.entity";
-import { SUPERADMIN_ROLE, USER_ROLE } from "#/utils/constants/role.name";
+import { ADMIN_ROLE, SUPERADMIN_ROLE, USER_ROLE } from "#/utils/constants/role.name";
 import { Status } from "#/utils/enums/status.enum";
 
 export const roleMasterData: Role[] = [
@@ -15,6 +15,15 @@ export const roleMasterData: Role[] = [
   {
     id: '2e5b6d92-2f36-4b45-b2b8-cb594f49807b',
     name: USER_ROLE,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    deletedAt: null,
+    users: [],
+    status: Status.ACTIVE
+  },
+  {
+    id: '504395bb-dd62-4e20-81d3-6c56529f3e84',
+    name: ADMIN_ROLE,
     createdAt: new Date(),
     updatedAt: new Date(),
     deletedAt: null,

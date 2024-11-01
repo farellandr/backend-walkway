@@ -23,7 +23,7 @@ export class CategoryService {
   }
 
   async findAll(page: number = 1, limit: number = 10) {
-    return await this.categoryrepository.findAndCount({
+    return await this.categoryrepository.find({
       skip: (page - 1) * limit,
       take: limit
     });

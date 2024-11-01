@@ -3,7 +3,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
-import { Repository } from 'typeorm';
+import { In, Not, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { RoleService } from '../role/role.service';
@@ -32,12 +32,12 @@ export class UserService {
     private readonly roleRepository: RoleService,
   ) {}
 
-  async findAddress(id: string) {
-    return await this.addressRepository.findOneOrFail({
-      where: { id },
+  async findAddress(email: string) {
+    return await this.addressRepository.find({
+      where: { user: { email } },
       relations: {
-        user: true,
-      },
+        user: true
+      }
     });
   }
 
@@ -177,7 +177,6 @@ export class UserService {
     });
   }
 
-  // should only get admins
   async findAll(page: number = 1, limit: number = 10) {
     return await this.userRepository.findAndCount({
       skip: (page - 1) * limit,
@@ -186,6 +185,41 @@ export class UserService {
         role: true,
       },
     });
+  }
+
+  async findAdmins(page: number = 1, limit: number = 10) {
+    return await this.userRepository.find({
+      skip: (page - 1) * limit,
+      take: limit,
+      relations: {
+        role: true,
+      },
+      where: {
+        role: {
+          name: Not(In(['user', 'superadmin']))
+        }
+      },
+      order: {
+        createdAt: 'DESC'
+      }
+    });
+  }
+
+  async findByToken(data: any) {
+    const user =  await this.userRepository.findOneOrFail({
+      where: { email: data.email },
+      relations: {
+        addresses: true,
+        role: true,
+      },
+    }); 
+
+    return {
+      name: user.name,
+      email: user.email,
+      phone_number: user.phone_number,
+      role: user.role.name,
+    }
   }
 
   async findOne(id: string) {

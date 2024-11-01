@@ -64,8 +64,6 @@ export class BrandController {
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit?: number,
   ) {
     return {
-      page,
-      limit,
       data: await this.brandService.findAll(page, limit),
       statusCode: HttpStatus.OK,
       message: 'success',
@@ -78,7 +76,7 @@ export class BrandController {
 
     const formattedBrands = brands.map((brand) => ({
       ...brand,
-      image: `http://localhost:3222/brand/uploads/${brand.image}`,
+      image: `http://172.17.0.144:3222/brand/uploads/${brand.image}`,
     }));
     return {
       data: formattedBrands,

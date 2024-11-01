@@ -23,11 +23,11 @@ export class BrandService {
   }
 
   async findMany() {
-    return await this.brandRepository.find({ take: 6 });
+    return await this.brandRepository.find({ take: 5 });
   }
 
   async findAll(page: number = 1, limit: number = 10) {
-    return await this.brandRepository.findAndCount({
+    return await this.brandRepository.find({
       skip: (page - 1) * limit,
       take: limit,
     });

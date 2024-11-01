@@ -57,6 +57,25 @@ export class UserController {
     }
   }
 
+  @Get('/admins')
+  async findAdmins(@Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number, @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit?: number) {
+    return {
+      data: await this.userService.findAdmins(page, limit),
+      statusCode: HttpStatus.OK,
+      message: 'success'
+    }
+  }
+
+  @Get('address/:email')
+  async findAddress(@Param('email') email: string) {
+    return {
+      data: await this.userService.findAddress(email),
+      statusCode: HttpStatus.OK,
+      message: 'success',
+    };
+  }
+
+
   @Get(':id')
   async findOne(@Param('id', ParseUUIDPipe) id: string) {
     return {

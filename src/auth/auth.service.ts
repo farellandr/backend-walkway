@@ -19,8 +19,7 @@ export class AuthService {
 
   async getUserByToken(token: string) {
     const payload = jwtDecode(token);
-
-    return await this.userRepository.findOne(payload.sub);
+    return await this.userRepository.findByToken(payload);
   }
 
   async validate(loginDto: LoginDto) {

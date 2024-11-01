@@ -28,15 +28,25 @@ import { capitalizeWords } from '#/utils/helpers/capitalizer';
 import { of } from 'rxjs';
 import { join } from 'path';
 import { PhotoType } from '#/utils/enums/photo-types.enum';
+import { jwtDecode } from 'jwt-decode';
 
 @Controller('product')
 export class ProductController {
-  constructor(private readonly productService: ProductService) {}
+  constructor(private readonly productService: ProductService) { }
 
   @Post()
   async create(@Body() createProductDto: CreateProductDto) {
     return {
       data: await this.productService.create(createProductDto),
+      statusCode: HttpStatus.CREATED,
+      message: 'success',
+    };
+  }
+
+  @Post('/checkout-token')
+  async CheckoutToken(@Body() product: any) {
+    return {
+      data: await this.productService.checkoutToken(product),
       statusCode: HttpStatus.CREATED,
       message: 'success',
     };
@@ -91,14 +101,19 @@ export class ProductController {
   }
 
   @Get()
-  async findAll(
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
-    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit?: number,
-  ) {
+  async findAll() {
+    const products = await this.productService.findAll();
+    const formattedProducts = products.map((product) => ({
+      ...product,
+      frontImage:
+        'http://172.17.0.144:3222/product/uploads/' +
+        product.productPhotos.find(
+          (photo) => photo.photoType === PhotoType.FRONT,
+        )?.image,
+    }));
+
     return {
-      page,
-      limit,
-      data: await this.productService.findAll(page, limit),
+      data: formattedProducts,
       statusCode: HttpStatus.OK,
       message: 'success',
     };
@@ -117,7 +132,7 @@ export class ProductController {
       return {
         ...bid,
         productPhotos: frontPhoto
-          ? `http://localhost:3222/product/uploads/${frontPhoto}`
+          ? `http://172.17.0.144:3222/product/uploads/${frontPhoto}`
           : null,
         productName: product.name
       };
@@ -130,6 +145,16 @@ export class ProductController {
     };
   }
 
+  @Get('/checkout/:token')
+  async getUserByToken(@Param('token') token: string) {
+    const payload = jwtDecode(token)
+    return {
+      data: [await this.productService.getCheckoutData(payload)],
+      statusCode: HttpStatus.OK,
+      message: 'success',
+    };
+  }
+
   @Get('/newest')
   async findNewest() {
     const products = await this.productService.findNewest();
@@ -137,7 +162,7 @@ export class ProductController {
     const formattedProducts = products.map((product) => ({
       ...product,
       productPhotos:
-        'http://localhost:3222/product/uploads/' +
+        'http://172.17.0.144:3222/product/uploads/' +
         product.productPhotos.find(
           (photo) => photo.photoType === PhotoType.FRONT,
         )?.image,
@@ -165,10 +190,7 @@ export class ProductController {
 
     const product = await this.productService.findName(formattedName);
     return {
-      data: {
-        ...product,
-        productPhotos: product.productPhotos.map((photo) => photo.image),
-      },
+      data: await this.productService.findName(formattedName),
       statusCode: HttpStatus.OK,
       message: 'success',
     };

@@ -6,14 +6,33 @@ import { CreateOrderDto } from './dto/create-order.dto';
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
-  @Post()
-  async create(@Body() createOrderDto: CreateOrderDto) {
+  // @Post()
+  // async create(@Body() createOrderDto: CreateOrderDto) {
+  //   return {
+  //     data: await this.orderService.create(createOrderDto),
+  //     statusCode: HttpStatus.CREATED,
+  //     message: 'success'
+  //   }
+  // }
+
+  @Post('/rates')
+  async getCourierRate(@Body() data: any) {
     return {
-      data: await this.orderService.create(createOrderDto),
+      data: await this.orderService.getRate(data),
       statusCode: HttpStatus.CREATED,
       message: 'success'
     }
   }
+
+  @Post('/generate-token')
+  async genToken(@Body() data: any) {
+    return {
+      data: await this.orderService.genPaymentToken(data),
+      statusCode: HttpStatus.CREATED,
+      message: 'success'
+    }
+  }
+
   @Get()
   async findAll() {
     return {

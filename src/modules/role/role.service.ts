@@ -3,7 +3,7 @@ import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Role } from './entities/role.entity';
-import { Repository } from 'typeorm';
+import { In, Not, Repository } from 'typeorm';
 
 @Injectable()
 export class RoleService {
@@ -23,9 +23,12 @@ export class RoleService {
   }
 
   async findAll(page: number = 1, limit: number = 10) {
-    return await this.roleRepository.findAndCount({
+    return await this.roleRepository.find({
       skip: (page - 1) * limit,
-      take: limit
+      take: limit,
+      where: {
+        name: Not(In(['user', 'superadmin']))
+      }
     })
   }
 

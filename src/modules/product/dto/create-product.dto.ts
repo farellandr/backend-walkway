@@ -3,6 +3,7 @@ import {
   IsNotEmpty,
   IsNumber,
   IsObject,
+  IsOptional,
   IsString,
   IsUUID,
   ValidateNested,
@@ -15,14 +16,14 @@ class ProductPhotosDto {
   @IsString()
   front: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  side: string[];
+  side?: string[];
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  bottom: string;
+  bottom?: string;
 }
 
 export class CreateProductDto {

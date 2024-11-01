@@ -3,7 +3,7 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './entities/product.entity';
-import { Between, Repository } from 'typeorm';
+import { Between, Like, Repository } from 'typeorm';
 import { BrandService } from '../brand/brand.service';
 import { ProductDetail } from './entities/product-detail.entity';
 import { CategoryService } from '../category/category.service';
@@ -14,6 +14,7 @@ import { BidProduct } from './entities/bid-product.entity';
 import { BidParticipant } from './entities/bid-participant.entity';
 import { ProductPhoto } from './entities/product-photo.entity';
 import { PhotoType } from '#/utils/enums/photo-types.enum';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class ProductService {
@@ -31,7 +32,29 @@ export class ProductService {
     private readonly brandRepository: BrandService,
     private readonly categoryRepository: CategoryService,
     private readonly userCartRepository: UserService,
-  ) {}
+    private readonly jwtService: JwtService,
+  ) { }
+
+  async getCheckoutData(data: any) {
+    const user = await this.productDetailRepository.findOneOrFail({
+      where: { id: data.data.data.id },
+      relations: {
+        product: {
+          productPhotos: true,
+          brand: true
+        }
+      },
+    });
+
+    return user
+  }
+
+  async checkoutToken(data: ProductDetail) {
+    const payload = {
+      data
+    };
+    return { checkout_token: this.jwtService.sign(payload) };
+  }
 
   async participateBid(body: any) {
     const [bidProduct, user] = await Promise.all([
@@ -199,7 +222,7 @@ export class ProductService {
         });
       }
     }
-    
+
     for (const detail of createProductDto.productDetails) {
       await this.productDetailRepository.insert({
         ...detail,
@@ -221,8 +244,6 @@ export class ProductService {
     });
   }
 
-  
-
   async findNewest() {
     const currentDate = new Date();
     const firstDayOfMonth = new Date(
@@ -240,9 +261,9 @@ export class ProductService {
     );
 
     return await this.productRepository.find({
-      where: {
-        createdAt: Between(firstDayOfMonth, lastDayOfMonth),
-      },
+      // where: {
+      //   createdAt: Between(firstDayOfMonth, lastDayOfMonth),
+      // },
       relations: {
         brand: true,
         categories: true,
@@ -252,14 +273,13 @@ export class ProductService {
     });
   }
 
-  async findAll(page: number = 1, limit: number = 10) {
-    return await this.productRepository.findAndCount({
-      skip: (page - 1) * limit,
-      take: limit,
+  async findAll() {
+    return await this.productRepository.find({
       relations: {
         brand: true,
         productDetails: true,
         categories: true,
+        productPhotos: true
       },
     });
   }
@@ -267,7 +287,7 @@ export class ProductService {
   async findName(param: string) {
     return await this.productRepository.findOneOrFail({
       where: {
-        name: param,
+        name: Like(param),
       },
       relations: {
         brand: true,
@@ -275,6 +295,11 @@ export class ProductService {
         productDetails: true,
         productPhotos: true,
       },
+      order: {
+        productDetails: {
+          size: 'ASC'
+        }
+      }
     });
   }
 
@@ -288,6 +313,11 @@ export class ProductService {
         categories: true,
         productDetails: true,
       },
+      order: {
+        productDetails: {
+          size: 'ASC'
+        }
+      }
     });
   }
 

@@ -39,6 +39,9 @@ export class User {
   @Column({ type: 'uuid' })
   roleId: string;
 
+  @Column({ type: 'uuid', nullable: true })
+  defaultAddress?: string;
+
   @OneToMany(() => Address, (address) => address.user)
   addresses: Address[];
 
