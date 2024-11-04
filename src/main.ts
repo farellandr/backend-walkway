@@ -17,7 +17,7 @@ async function bootstrap() {
   app.use(CorrelationIdMiddleware());
   app.useLogger(logger);
   app.enableCors();
-  app.useGlobalFilters(new ExceptionsFilter())
+  app.useGlobalFilters(new ExceptionsFilter());
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -37,10 +37,10 @@ async function bootstrap() {
   const configService = app.get<ConfigService>(ConfigService);
   const port = configService.get<number>('port');
 
-  const hostname = '172.17.0.230';
+  const hostname = configService.get<string>('host');
 
   await app.listen(port, hostname, () => {
-    // logger.log(`Server listening on ${hostname}:${port}`);
+    logger.log(`Server listening on ${hostname}:${port}`);
     // if (error) {
     //   logger.error(error);
     //   process.exit(1);

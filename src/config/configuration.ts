@@ -2,6 +2,7 @@ export default () => {
   return {
     env: process.env.NODE_ENV,
     port: parseInt(process.env.PORT, 10) || 3000,
+    host: process.env.HOST || '0.0.0.0',
     database: {
       client: process.env.DATABASE_CLIENT,
       host: process.env.DATABASE_HOST,
