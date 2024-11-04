@@ -48,5 +48,5 @@ export class CreateAddressDto {
 
   @IsNotEmpty()
   @IsOptional()
-  note: string;
+  note?: string;
 }

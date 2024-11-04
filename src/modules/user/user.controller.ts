@@ -28,6 +28,15 @@ export class UserController {
     }
   }
 
+  @Patch('/set-address')
+  async setAddress(@Body() body: any) {
+    return {
+      data: await this.userService.setAddress(body),
+      statusCode: HttpStatus.CREATED,
+      message: 'success'
+    }
+  }
+
   @Patch('/edit-address')
   async updateAddress(@Body() updateAddressDto: UpdateAddressDto) {
     return {
@@ -56,6 +65,16 @@ export class UserController {
       message: 'success'
     }
   }
+
+  @Get('/get-address/:id')
+  async findDefaultAddress(@Param('id') id: string) {
+    return {
+      data: await this.userService.getAddress(id),
+      statusCode: HttpStatus.OK,
+      message: 'success'
+    }
+  }
+
 
   @Get('/admins')
   async findAdmins(@Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number, @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit?: number) {

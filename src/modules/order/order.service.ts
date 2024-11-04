@@ -95,7 +95,7 @@ export class OrderService {
       this.httpService.post(`${this.baseUrl}/v1/rates/couriers`, {
         origin_postal_code: origin_postal_code,
         destination_postal_code: data.address.zipcode,
-        couriers: "anteraja,jne,sicepat,jnt,ninja,pos,paxel,lalamove",
+        couriers: "anteraja,jne,sicepat,jnt,ninja,paxel,lalamove",
         items: data.product.map((item: any) => ({
           name: item.product.name,
           value: item.product.price,

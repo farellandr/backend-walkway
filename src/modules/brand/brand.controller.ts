@@ -76,7 +76,7 @@ export class BrandController {
 
     const formattedBrands = brands.map((brand) => ({
       ...brand,
-      image: `http://172.17.0.144:3222/brand/uploads/${brand.image}`,
+      image: `${brand.image}`,
     }));
     return {
       data: formattedBrands,

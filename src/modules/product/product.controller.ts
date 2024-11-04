@@ -106,7 +106,6 @@ export class ProductController {
     const formattedProducts = products.map((product) => ({
       ...product,
       frontImage:
-        'http://172.17.0.144:3222/product/uploads/' +
         product.productPhotos.find(
           (photo) => photo.photoType === PhotoType.FRONT,
         )?.image,
@@ -132,7 +131,7 @@ export class ProductController {
       return {
         ...bid,
         productPhotos: frontPhoto
-          ? `http://172.17.0.144:3222/product/uploads/${frontPhoto}`
+          ? `${frontPhoto}`
           : null,
         productName: product.name
       };
@@ -162,7 +161,6 @@ export class ProductController {
     const formattedProducts = products.map((product) => ({
       ...product,
       productPhotos:
-        'http://172.17.0.144:3222/product/uploads/' +
         product.productPhotos.find(
           (photo) => photo.photoType === PhotoType.FRONT,
         )?.image,

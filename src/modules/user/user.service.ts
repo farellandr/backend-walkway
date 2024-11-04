@@ -32,26 +32,60 @@ export class UserService {
     private readonly roleRepository: RoleService,
   ) {}
 
+  async getAddress(id: string) {
+    return await this.addressRepository.findOneOrFail({
+      where: { id },
+    });
+  }
+
   async findAddress(email: string) {
     return await this.addressRepository.find({
       where: { user: { email } },
       relations: {
-        user: true
-      }
+        user: true,
+      },
     });
   }
 
   async createAddress(createAddressDto: CreateAddressDto) {
     const user = await this.userRepository.findOneOrFail({
       where: { email: createAddressDto.email },
+      relations: {
+        addresses: true,
+      },
     });
 
-    const result = await this.addressRepository.insert({...createAddressDto, userId: user.id});
+    const result = await this.addressRepository.insert({
+      ...createAddressDto,
+      userId: user.id,
+    });
+
+    if (user.addresses.length === 0) {
+      await this.userRepository.update(user.id, {
+        defaultAddress: result.identifiers[0].id,
+      });
+    }
+
     return await this.addressRepository.findOneOrFail({
       where: {
         id: result.identifiers[0].id,
       },
     });
+  }
+
+  async setAddress(body: any) {
+    const user = await this.userRepository.findOneOrFail({
+      where: { email: body.email },
+      relations: {
+        addresses: true,
+      },
+    });
+
+    await this.userRepository.update(user.id, {
+      defaultAddress: body.addressId,
+    });
+
+    return user;
   }
 
   async updateAddress(updateAddressDto: UpdateAddressDto) {
@@ -196,30 +230,31 @@ export class UserService {
       },
       where: {
         role: {
-          name: Not(In(['user', 'superadmin']))
-        }
+          name: Not(In(['user', 'superadmin'])),
+        },
       },
       order: {
-        createdAt: 'DESC'
-      }
+        createdAt: 'DESC',
+      },
     });
   }
 
   async findByToken(data: any) {
-    const user =  await this.userRepository.findOneOrFail({
+    const user = await this.userRepository.findOneOrFail({
       where: { email: data.email },
       relations: {
         addresses: true,
         role: true,
       },
-    }); 
+    });
 
     return {
       name: user.name,
       email: user.email,
       phone_number: user.phone_number,
       role: user.role.name,
-    }
+      defaultAddress: user.defaultAddress,
+    };
   }
 
   async findOne(id: string) {
