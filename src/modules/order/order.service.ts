@@ -6,7 +6,12 @@ import { Repository } from 'typeorm';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { catchError, firstValueFrom, map } from 'rxjs';
-import { origin_address, origin_contact_name, origin_contact_phone, origin_postal_code } from '#/utils/constants/origin.data';
+import {
+  origin_address,
+  origin_contact_name,
+  origin_contact_phone,
+  origin_postal_code,
+} from '#/utils/constants/origin.data';
 import { UserService } from '../user/user.service';
 import { ProductService } from '../product/product.service';
 import { OrderItem } from './entities/order-item.entity';
@@ -22,11 +27,11 @@ export class OrderService {
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
     private readonly userService: UserService,
-    private readonly productService: ProductService
-  ) { }
+    private readonly productService: ProductService,
+  ) {}
 
-  private baseUrl = this.configService.get<string>('biteship.url')
-  private apiKey = this.configService.get<string>('biteship.secret')
+  private baseUrl = this.configService.get<string>('biteship.url');
+  private apiKey = this.configService.get<string>('biteship.secret');
   private biteshipHeader = {
     Authorization: `Bearer ${this.apiKey}`,
     'Content-Type': 'application/json',
@@ -92,89 +97,153 @@ export class OrderService {
 
   async getRate(data: any) {
     return await firstValueFrom(
-      this.httpService.post(`${this.baseUrl}/v1/rates/couriers`, {
-        origin_postal_code: origin_postal_code,
-        destination_postal_code: data.address.zipcode,
-        couriers: "anteraja,jne,sicepat,jnt,ninja,paxel,lalamove",
-        items: data.product.map((item: any) => ({
-          name: item.product.name,
-          value: item.product.price,
-          quantity: 1,
-          weight: 600
-        }))
-      }, { headers: this.biteshipHeader }).pipe(
-        map((res) => res.data),
-        catchError((error) => {
-          throw error;
-        }),
-      ),
+      this.httpService
+        .post(
+          `${this.baseUrl}/v1/rates/couriers`,
+          {
+            origin_postal_code: origin_postal_code,
+            destination_postal_code: data.address.zipcode,
+            couriers: 'anteraja,jne,sicepat,jnt,ninja,paxel,lalamove',
+            items: data.product.map((item: any) => ({
+              name: item.product.name,
+              value: item.product.price,
+              quantity: 1,
+              weight: 600,
+            })),
+          },
+          { headers: this.biteshipHeader },
+        )
+        .pipe(
+          map((res) => res.data),
+          catchError((error) => {
+            throw error;
+          }),
+        ),
     );
   }
 
   async genPaymentToken(data: any) {
-    const orderId = randomUUID()
+    const orderId = randomUUID();
 
     return await firstValueFrom(
-      this.httpService.post(`https://app.sandbox.midtrans.com/snap/v1/transactions`, {
-        transaction_details: {
-          order_id: orderId,
-          gross_amount: (data.orderTotal - data.orderShip) + data.orderShip
-        },
-        item_details: [
-          ...data.orderItems.map((item: any) => ({
-            id: item.product.id,
-            price: item.product.price,
-            quantity: 1,
-            name: item.product.name,
-            brand: item.product.brand.name,
-            merchant_name: "Walkway",
-          })),
+      this.httpService
+        .post(
+          `https://app.sandbox.midtrans.com/snap/v1/transactions`,
           {
-            id: "shipping",
-            price: data.orderShip,
-            quantity: 1,
-            name: "Shipping",
+            transaction_details: {
+              order_id: orderId,
+              gross_amount: data.orderTotal - data.orderShip + data.orderShip,
+            },
+            item_details: [
+              ...data.orderItems.map((item: any) => ({
+                id: item.product.id,
+                price: item.product.price,
+                quantity: 1,
+                name: item.product.name,
+                brand: item.product.brand.name,
+                merchant_name: 'Walkway',
+              })),
+              {
+                id: 'shipping',
+                price: data.orderShip,
+                quantity: 1,
+                name: 'Shipping',
+              },
+            ],
+            customer_details: {
+              first_name: data.customer.name,
+              email: data.customer.email,
+              phone: data.customer.phone_number,
+            },
+            page_expiry: {
+              duration: 10,
+              unit: 'minutes',
+            },
+            custom_field: 'hayuuu',
           },
-        ],
-        customer_details: {
-          first_name: data.customer.name,
-          email: data.customer.email,
-          phone: data.customer.phone_number,
-        },
-        page_expiry: {
-          duration: 10,
-          unit: "minutes"
-        },
-        custom_field: "hayuuu"
-      }, { headers: this.midtransHeader }).pipe(
-        map((res) => res.data),
-        catchError((error) => {
-          throw error;
-        }),
-      ),
+          { headers: this.midtransHeader },
+        )
+        .pipe(
+          map((res) => res.data),
+          catchError((error) => {
+            throw error;
+          }),
+        ),
+    );
+  }
+
+  async genBidPaymentToken(data: any) {
+    const orderId = randomUUID();
+
+    return await firstValueFrom(
+      this.httpService
+        .post(
+          `https://app.sandbox.midtrans.com/snap/v1/transactions`,
+          {
+            transaction_details: {
+              order_id: orderId,
+              gross_amount: data.orderTotal,
+            },
+            item_details: [
+              ...data.orderItems.map((item: any) => ({
+                id: item.product.id,
+                price: item.product.price,
+                quantity: 1,
+                name: item.product.name,
+                brand: item.product.brand.name,
+                merchant_name: 'Walkway',
+              })),
+            ],
+            customer_details: {
+              first_name: data.customer.name,
+              email: data.customer.email,
+              phone: data.customer.phone_number,
+            },
+            page_expiry: {
+              duration: 10,
+              unit: 'minutes',
+            },
+            custom_field: 'hayuuu',
+          },
+          { headers: this.midtransHeader },
+        )
+        .pipe(
+          map((res) => res.data),
+          catchError((error) => {
+            throw error;
+          }),
+        ),
     );
   }
 
   async findAll() {
     const response = await firstValueFrom(
-      this.httpService.get(`${this.baseUrl}/v2/orders?test_data=true`, { headers: this.biteshipHeader }).pipe(
-        map((res) => res.data),
-        catchError((error) => {
-          throw error;
-        }),
-      ),
+      this.httpService
+        .get(`${this.baseUrl}/v2/orders?test_data=true`, {
+          headers: this.biteshipHeader,
+        })
+        .pipe(
+          map((res) => res.data),
+          catchError((error) => {
+            throw error;
+          }),
+        ),
     );
     return response;
   }
 
   async findOne(id: string) {
     const response = await firstValueFrom(
-      this.httpService.get(`${this.baseUrl}/v1/orders/${id}`, { headers: this.biteshipHeader }).pipe(
-        map((res) => res.data),
-        catchError((error) => {
-          throw error;
-        }),
-      ),
+      this.httpService
+        .get(`${this.baseUrl}/v1/orders/${id}`, {
+          headers: this.biteshipHeader,
+        })
+        .pipe(
+          map((res) => res.data),
+          catchError((error) => {
+            throw error;
+          }),
+        ),
     );
     return response;
   }

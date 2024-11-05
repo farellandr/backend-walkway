@@ -32,7 +32,7 @@ import { jwtDecode } from 'jwt-decode';
 
 @Controller('product')
 export class ProductController {
-  constructor(private readonly productService: ProductService) { }
+  constructor(private readonly productService: ProductService) {}
 
   @Post()
   async create(@Body() createProductDto: CreateProductDto) {
@@ -105,10 +105,10 @@ export class ProductController {
     const products = await this.productService.findAll();
     const formattedProducts = products.map((product) => ({
       ...product,
-      frontImage:
-        product.productPhotos.find(
-          (photo) => photo.photoType === PhotoType.FRONT,
-        )?.image,
+      name: `${product.brand.name} ${product.name}`,
+      frontImage: product.productPhotos.find(
+        (photo) => photo.photoType === PhotoType.FRONT,
+      )?.image,
     }));
 
     return {
@@ -130,10 +130,8 @@ export class ProductController {
 
       return {
         ...bid,
-        productPhotos: frontPhoto
-          ? `${frontPhoto}`
-          : null,
-        productName: product.name
+        productPhotos: frontPhoto ? `${frontPhoto}` : null,
+        productName: `${product.brand.name} ${product.name}`,
       };
     });
 
@@ -144,9 +142,29 @@ export class ProductController {
     };
   }
 
+  @Get('/bid/:id')
+  async findBid(@Param('id') id: string) {
+    const bid = await this.productService.getBid(id);
+
+    const product = bid.productDetail.product;
+    const frontPhoto = product.productPhotos.find(
+      (photo) => photo.photoType === PhotoType.FRONT,
+    )?.image;
+
+    return {
+      data: {
+        ...bid,
+        productPhotos: frontPhoto ? `${frontPhoto}` : null,
+        productName: `${product.brand.name} ${product.name}`,
+      },
+      statusCode: HttpStatus.OK,
+      message: 'success',
+    };
+  }
+
   @Get('/checkout/:token')
   async getUserByToken(@Param('token') token: string) {
-    const payload = jwtDecode(token)
+    const payload = jwtDecode(token);
     return {
       data: [await this.productService.getCheckoutData(payload)],
       statusCode: HttpStatus.OK,
@@ -160,10 +178,10 @@ export class ProductController {
 
     const formattedProducts = products.map((product) => ({
       ...product,
-      productPhotos:
-        product.productPhotos.find(
-          (photo) => photo.photoType === PhotoType.FRONT,
-        )?.image,
+      name: `${product.brand.name} ${product.name}`,
+      productPhotos: product.productPhotos.find(
+        (photo) => photo.photoType === PhotoType.FRONT,
+      )?.image,
     }));
 
     return {
@@ -182,22 +200,16 @@ export class ProductController {
     );
   }
 
-  @Get(':name')
+  @Get('/:name')
   async findName(@Param('name') name: string) {
     const formattedName = capitalizeWords(name.replace(/-/g, ' '));
 
     const product = await this.productService.findName(formattedName);
     return {
-      data: await this.productService.findName(formattedName),
-      statusCode: HttpStatus.OK,
-      message: 'success',
-    };
-  }
-
-  @Get(':id')
-  async findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return {
-      data: await this.productService.findOne(id),
+      data: {
+        ...product,
+        name: `${product.brand.name} ${product.name}`,
+      },
       statusCode: HttpStatus.OK,
       message: 'success',
     };

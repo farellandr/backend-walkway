@@ -3,7 +3,7 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './entities/product.entity';
-import { Between, Like, Repository } from 'typeorm';
+import { Between, ILike, Like, Repository } from 'typeorm';
 import { BrandService } from '../brand/brand.service';
 import { ProductDetail } from './entities/product-detail.entity';
 import { CategoryService } from '../category/category.service';
@@ -33,7 +33,29 @@ export class ProductService {
     private readonly categoryRepository: CategoryService,
     private readonly userCartRepository: UserService,
     private readonly jwtService: JwtService,
-  ) { }
+  ) {}
+
+  async getBid(id: string) {
+    return await this.bidProductRepository.findOneOrFail({
+      where: { id },
+      order: {
+        bidParticipants: {
+          amount: 'DESC'
+        }
+      },
+      relations: {
+        bidParticipants: {
+          user: true
+        },
+        productDetail: {
+          product: {
+            productPhotos: true,
+            brand: true,
+          },
+        },
+      },
+    });
+  }
 
   async getCheckoutData(data: any) {
     const user = await this.productDetailRepository.findOneOrFail({
@@ -41,17 +63,17 @@ export class ProductService {
       relations: {
         product: {
           productPhotos: true,
-          brand: true
-        }
+          brand: true,
+        },
       },
     });
 
-    return user
+    return user;
   }
 
   async checkoutToken(data: ProductDetail) {
     const payload = {
-      data
+      data,
     };
     return { checkout_token: this.jwtService.sign(payload) };
   }
@@ -138,10 +160,11 @@ export class ProductService {
       relations: {
         productDetail: {
           product: {
-            productPhotos: true
-          }
-        }
-      }
+            productPhotos: true,
+            brand: true,
+          },
+        },
+      },
     });
   }
 
@@ -197,7 +220,7 @@ export class ProductService {
     }
 
     const product = new Product();
-    product.name = brand.name + ' ' + createProductDto.name;
+    product.name = createProductDto.name;
     product.price = createProductDto.price;
     product.brandId = createProductDto.brandId;
     product.categories = category;
@@ -205,7 +228,9 @@ export class ProductService {
 
     const result = await this.productRepository.insert(product);
 
-    for (const [type, photos] of Object.entries(createProductDto.productPhotos)) {
+    for (const [type, photos] of Object.entries(
+      createProductDto.productPhotos,
+    )) {
       if (Array.isArray(photos)) {
         for (const photoUrl of photos) {
           await this.productPhotoRepository.insert({
@@ -279,16 +304,32 @@ export class ProductService {
         brand: true,
         productDetails: true,
         categories: true,
-        productPhotos: true
+        productPhotos: true,
       },
     });
   }
 
   async findName(param: string) {
+    const brands = await this.brandRepository.findAll();
+
+    const whereConditions = [];
+
+    whereConditions.push({
+      name: ILike(`%${param}%`),
+    });
+
+    for (const brand of brands) {
+      const brandNameRegex = new RegExp(`^${brand.name}\\s+`, 'i');
+      if (param.match(brandNameRegex)) {
+        const nameWithoutBrand = param.replace(brandNameRegex, '').trim();
+        whereConditions.push({
+          name: ILike(`%${nameWithoutBrand}%`),
+        });
+      }
+    }
+
     return await this.productRepository.findOneOrFail({
-      where: {
-        name: Like(param),
-      },
+      where: whereConditions,
       relations: {
         brand: true,
         categories: true,
@@ -297,9 +338,9 @@ export class ProductService {
       },
       order: {
         productDetails: {
-          size: 'ASC'
-        }
-      }
+          size: 'ASC',
+        },
+      },
     });
   }
 
@@ -315,9 +356,9 @@ export class ProductService {
       },
       order: {
         productDetails: {
-          size: 'ASC'
-        }
-      }
+          size: 'ASC',
+        },
+      },
     });
   }
 
