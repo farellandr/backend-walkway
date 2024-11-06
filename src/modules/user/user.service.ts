@@ -245,6 +245,7 @@ export class UserService {
       relations: {
         addresses: true,
         role: true,
+        cart: true
       },
     });
 
@@ -254,6 +255,7 @@ export class UserService {
       phone_number: user.phone_number,
       role: user.role.name,
       defaultAddress: user.defaultAddress,
+      cartId: user.cart.id,
     };
   }
 
