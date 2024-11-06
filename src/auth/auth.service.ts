@@ -29,7 +29,7 @@ export class AuthService {
         {
           statusCode: HttpStatus.UNAUTHORIZED,
           error: 'Unauthorized',
-          message: 'Invalid email or credentials.',
+          message: 'Invalid email.',
         },
         HttpStatus.UNAUTHORIZED,
       );
@@ -41,7 +41,7 @@ export class AuthService {
         {
           statusCode: HttpStatus.UNAUTHORIZED,
           error: 'Unauthorized',
-          message: 'Invalid password or credentials.',
+          message: 'Wrong password.',
         },
         HttpStatus.UNAUTHORIZED,
       );

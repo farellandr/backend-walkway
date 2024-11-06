@@ -1,10 +1,10 @@
-import { Controller, Get, Post, Body, Param, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, HttpStatus, Request } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 
 @Controller('order')
 export class OrderController {
-  constructor(private readonly orderService: OrderService) {}
+  constructor(private readonly orderService: OrderService) { }
 
   // @Post()
   // async create(@Body() createOrderDto: CreateOrderDto) {
@@ -14,6 +14,12 @@ export class OrderController {
   //     message: 'success'
   //   }
   // }
+
+  // @Post('/payment')
+  // async midtransNotification(@Request() req) {
+  //   return await this.orderService.paymentHandler(req.body);
+  // }
+
 
   @Post('/rates')
   async getCourierRate(@Body() data: any) {
@@ -28,6 +34,15 @@ export class OrderController {
   async genToken(@Body() data: any) {
     return {
       data: await this.orderService.genPaymentToken(data),
+      statusCode: HttpStatus.CREATED,
+      message: 'success'
+    }
+  }
+
+  @Post('/generate-token-bid')
+  async genBidToken(@Body() data: any) {
+    return {
+      data: await this.orderService.genBidPaymentToken(data),
       statusCode: HttpStatus.CREATED,
       message: 'success'
     }

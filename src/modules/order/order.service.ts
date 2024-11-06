@@ -28,7 +28,7 @@ export class OrderService {
     private readonly configService: ConfigService,
     private readonly userService: UserService,
     private readonly productService: ProductService,
-  ) {}
+  ) { }
 
   private baseUrl = this.configService.get<string>('biteship.url');
   private apiKey = this.configService.get<string>('biteship.secret');
@@ -40,6 +40,10 @@ export class OrderService {
     Authorization: `Basic U0ItTWlkLXNlcnZlci1sZUJYOVJyWldyV2ptZFFZY1NfZG5NY246`,
     'Content-Type': 'application/json',
   };
+
+  async paymentHandler(body: any) {
+    return console.log(body)
+  }
 
   // async create(createOrderDto: CreateOrderDto) {
   //   const address = await this.userService.findAddress(createOrderDto.addressId)
@@ -173,7 +177,6 @@ export class OrderService {
   }
 
   async genBidPaymentToken(data: any) {
-    const orderId = randomUUID();
 
     return await firstValueFrom(
       this.httpService
@@ -181,18 +184,18 @@ export class OrderService {
           `https://app.sandbox.midtrans.com/snap/v1/transactions`,
           {
             transaction_details: {
-              order_id: orderId,
-              gross_amount: data.orderTotal,
+              order_id: data.orderItems.id,
+              gross_amount: Number(data.orderTotal),
             },
             item_details: [
-              ...data.orderItems.map((item: any) => ({
-                id: item.product.id,
-                price: item.product.price,
+              {
+                id: data.orderItems.id,
+                price: Number(data.orderTotal),
                 quantity: 1,
-                name: item.product.name,
-                brand: item.product.brand.name,
+                name: data.orderItems.productDetail.product.id,
+                brand: data.orderItems.productDetail.product.brand.id,
                 merchant_name: 'Walkway',
-              })),
+              }
             ],
             customer_details: {
               first_name: data.customer.name,
