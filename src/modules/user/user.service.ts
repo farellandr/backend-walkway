@@ -32,9 +32,35 @@ export class UserService {
     private readonly roleRepository: RoleService,
   ) {}
 
+  async updateCartItem(cartItemId: string, quantity: number) {
+    await this.cartItemRepository.findOneOrFail({
+      where: { id: cartItemId },
+    });
+
+    await this.cartItemRepository.update(cartItemId, { quantity });
+    return await this.cartItemRepository.findOneOrFail({
+      where: { id: cartItemId },
+    });
+  }
+
   async getAddress(id: string) {
     return await this.addressRepository.findOneOrFail({
       where: { id },
+    });
+  }
+
+  async getCartItems(cartId: string) {
+    return await this.cartItemRepository.find({
+      where: { cartId },
+      relations: {
+        cart: true,
+        productDetail: {
+          product: {
+            brand: true,
+            productPhotos: true,
+          },
+        },
+      },
     });
   }
 
@@ -150,6 +176,11 @@ export class UserService {
   async findCart(id: string) {
     return await this.cartRepository.findOneOrFail({
       where: { id },
+      relations: {
+        cartItems: {
+          productDetail: true
+        }
+      }
     });
   }
 
@@ -245,7 +276,7 @@ export class UserService {
       relations: {
         addresses: true,
         role: true,
-        cart: true
+        cart: true,
       },
     });
 
@@ -255,7 +286,7 @@ export class UserService {
       phone_number: user.phone_number,
       role: user.role.name,
       defaultAddress: user.defaultAddress,
-      cartId: user.cart.id,
+      cartId: user?.cart?.id || '',
     };
   }
 

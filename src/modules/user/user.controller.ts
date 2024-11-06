@@ -1,4 +1,17 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpStatus, Query, DefaultValuePipe, ParseIntPipe, ParseUUIDPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  HttpStatus,
+  Query,
+  DefaultValuePipe,
+  ParseIntPipe,
+  ParseUUIDPipe,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -10,13 +23,22 @@ import { UpdateAddressDto } from './dto/update-address.dto';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  @Get('/cart/:id')
+  async getCartItems(@Param('id') id: string) {
+    return {
+      data: await this.userService.getCartItems(id),
+      statusCode: HttpStatus.OK,
+      message: 'success',
+    };
+  }
+
   @Post()
   async create(@Body() createUserDto: CreateUserDto) {
     return {
       data: await this.userService.create(createUserDto),
       statusCode: HttpStatus.CREATED,
-      message: 'success'
-    }
+      message: 'success',
+    };
   }
 
   @Post('add-address')
@@ -24,8 +46,8 @@ export class UserController {
     return {
       data: await this.userService.createAddress(createAddressDto),
       statusCode: HttpStatus.CREATED,
-      message: 'success'
-    }
+      message: 'success',
+    };
   }
 
   @Patch('/set-address')
@@ -33,8 +55,8 @@ export class UserController {
     return {
       data: await this.userService.setAddress(body),
       statusCode: HttpStatus.CREATED,
-      message: 'success'
-    }
+      message: 'success',
+    };
   }
 
   @Patch('/edit-address')
@@ -42,8 +64,8 @@ export class UserController {
     return {
       data: await this.userService.updateAddress(updateAddressDto),
       statusCode: HttpStatus.CREATED,
-      message: 'success'
-    }
+      message: 'success',
+    };
   }
 
   @Delete('/remove/:id')
@@ -57,13 +79,17 @@ export class UserController {
   }
 
   @Get()
-  async findAll(@Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number, @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit?: number) {
+  async findAll(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit?: number,
+  ) {
     return {
-      page, limit,
+      page,
+      limit,
       data: await this.userService.findAll(page, limit),
       statusCode: HttpStatus.OK,
-      message: 'success'
-    }
+      message: 'success',
+    };
   }
 
   @Get('/get-address/:id')
@@ -71,18 +97,20 @@ export class UserController {
     return {
       data: await this.userService.getAddress(id),
       statusCode: HttpStatus.OK,
-      message: 'success'
-    }
+      message: 'success',
+    };
   }
 
-
   @Get('/admins')
-  async findAdmins(@Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number, @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit?: number) {
+  async findAdmins(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit?: number,
+  ) {
     return {
       data: await this.userService.findAdmins(page, limit),
       statusCode: HttpStatus.OK,
-      message: 'success'
-    }
+      message: 'success',
+    };
   }
 
   @Get('address/:email')
@@ -94,7 +122,6 @@ export class UserController {
     };
   }
 
-
   @Get(':id')
   async findOne(@Param('id', ParseUUIDPipe) id: string) {
     return {
@@ -105,7 +132,10 @@ export class UserController {
   }
 
   @Patch(':id')
-  async update(@Param('id', ParseUUIDPipe) id: string, @Body() updateUserDto: UpdateUserDto) {
+  async update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
     return {
       data: await this.userService.update(id, updateUserDto),
       statusCode: HttpStatus.OK,
@@ -114,7 +144,10 @@ export class UserController {
   }
 
   @Patch('change-password/:id')
-  async updatePass(@Param('id', ParseUUIDPipe) id: string, @Body() updatePasswordDto: UpdatePasswordDto) {
+  async updatePass(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updatePasswordDto: UpdatePasswordDto,
+  ) {
     return {
       data: await this.userService.updatePassword(id, updatePasswordDto),
       statusCode: HttpStatus.OK,

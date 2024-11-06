@@ -1,6 +1,14 @@
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { Cart } from "./cart.entity";
-import { ProductDetail } from "#/modules/product/entities/product-detail.entity";
+import {
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { Cart } from './cart.entity';
+import { ProductDetail } from '#/modules/product/entities/product-detail.entity';
 
 @Entity()
 export class CartItem {
@@ -11,6 +19,9 @@ export class CartItem {
   cart: Cart;
   @Column({ type: 'uuid' })
   cartId: string;
+
+  @Column({ type: 'int' })
+  quantity: number;
 
   @ManyToOne(() => ProductDetail, (productDetail) => productDetail.cartItem)
   productDetail: ProductDetail;

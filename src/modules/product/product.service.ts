@@ -3,7 +3,7 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './entities/product.entity';
-import { Between, ILike, Like, Repository } from 'typeorm';
+import { Between, ILike, In, Like, Repository } from 'typeorm';
 import { BrandService } from '../brand/brand.service';
 import { ProductDetail } from './entities/product-detail.entity';
 import { CategoryService } from '../category/category.service';
@@ -40,12 +40,12 @@ export class ProductService {
       where: { id },
       order: {
         bidParticipants: {
-          amount: 'DESC'
-        }
+          amount: 'DESC',
+        },
       },
       relations: {
         bidParticipants: {
-          user: true
+          user: true,
         },
         productDetail: {
           product: {
@@ -58,8 +58,13 @@ export class ProductService {
   }
 
   async getCheckoutData(data: any) {
-    const user = await this.productDetailRepository.findOneOrFail({
-      where: { id: data.data.data.id },
+    const ids = data.data.data.map((id: any) => id.id); // Get the array of IDs
+
+    // Perform a find query for multiple products based on the IDs
+    const products = await this.productDetailRepository.find({
+      where: {
+        id: In(ids), // `In` is used to find records matching any of the IDs
+      },
       relations: {
         product: {
           productPhotos: true,
@@ -68,7 +73,7 @@ export class ProductService {
       },
     });
 
-    return user;
+    return products; // Return the list of products with their relations
   }
 
   async checkoutToken(data: ProductDetail) {
@@ -180,12 +185,7 @@ export class ProductService {
       this.userCartRepository.findCart(createCartItemDto.cartId),
     ]);
 
-    if (productDetail.stock - 1 >= 0) {
-      await this.productDetailRepository.save({
-        ...productDetail,
-        stock: productDetail.stock - 1,
-      });
-    } else {
+    if (productDetail.stock - 1 < 0) {
       throw new HttpException(
         {
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
@@ -196,7 +196,26 @@ export class ProductService {
       );
     }
 
-    return await this.userCartRepository.createCartItem(createCartItemDto);
+    const existingCartItem = cart.cartItems.find(
+      (item) => item.productDetail.id === createCartItemDto.productDetailId,
+    );
+
+    if (existingCartItem) {
+      await this.userCartRepository.updateCartItem(
+        existingCartItem.id,
+        existingCartItem.quantity + 1,
+      );
+    } else {
+      createCartItemDto.quantity = 1;
+      await this.userCartRepository.createCartItem(createCartItemDto);
+    }
+
+    await this.productDetailRepository.save({
+      ...productDetail,
+      stock: productDetail.stock - 1,
+    });
+
+    return { message: 'Item added to cart successfully.' };
   }
 
   async create(createProductDto: CreateProductDto) {

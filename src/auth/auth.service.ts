@@ -55,7 +55,6 @@ export class AuthService {
       email: user.email,
       name: user.name,
       role: user.role.name,
-      cartId: user.cart.id
     };
     return { access_token: this.jwtService.sign(payload) };
   }
