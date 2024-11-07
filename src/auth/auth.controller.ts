@@ -19,9 +19,9 @@ export class AuthController {
 
   @Post('/register')
   async register(@Body() registerDto: RegisterDto) {
-    const user = await this.authService.register(registerDto);
+    // const user = await this.authService.register(registerDto);
     return {
-      data: await this.authService.login(user),
+      data: await this.authService.register(registerDto),
       statusCode: HttpStatus.OK,
       message: 'success',
     };
