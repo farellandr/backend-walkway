@@ -28,7 +28,7 @@ export class OrderService {
     private readonly configService: ConfigService,
     private readonly userService: UserService,
     private readonly productService: ProductService,
-  ) { }
+  ) {}
 
   private baseUrl = this.configService.get<string>('biteship.url');
   private apiKey = this.configService.get<string>('biteship.secret');
@@ -42,61 +42,82 @@ export class OrderService {
   };
 
   async paymentHandler(body: any) {
-    return console.log(body)
+    return console.log(body);
   }
 
-  // async create(createOrderDto: CreateOrderDto) {
-  //   const address = await this.userService.findAddress(createOrderDto.addressId)
-  //   const product = await this.productService.findManyProductDetail(createOrderDto.productDetailId)
+  // {
+  //   transaction_type: 'on-us',
+  //   transaction_time: '2024-11-07 11:58:37',
+  //   transaction_status: 'settlement',
+  //   transaction_id: '30e77f39-ffda-449f-a307-366061777d71',
+  //   status_message: 'midtrans payment notification',
+  //   status_code: '200',
+  //   signature_key: 'e9ec7f1054e75231162da332d77a64692307a0973aed07d73e1fc18c8e4f52d68e3fd1f7e8a1ae76e6fff2f2f51879aac250b5d39322d105b5f99fb8c25d1763',
+  //   settlement_time: '2024-11-07 11:58:48',
+  //   payment_type: 'qris',
+  //   order_id: '8f9fed02-f3c3-4e5d-90a9-8b01cc2aba31',
+  //   merchant_id: 'G451523749',
+  //   issuer: 'gopay',
+  //   gross_amount: '1930000.00',
+  //   fraud_status: 'accept',
+  //   expiry_time: '2024-11-07 12:13:37',
+  //   custom_field1: 'order',
+  //   currency: 'IDR',
+  //   acquirer: 'gopay'
+  // }
 
-  //   const order = await firstValueFrom(
-  //     this.httpService.post(`${this.baseUrl}/v1/orders`, {
-  //       origin_contact_name: origin_contact_name,
-  //       origin_contact_phone: origin_contact_phone,
-  //       origin_address: origin_address,
-  //       origin_postal_code: origin_postal_code,
-  //       destination_contact_name: address.contact_name,
-  //       destination_contact_phone: address.contact_number,
-  //       destination_address: address.address,
-  //       destination_postal_code: address.zipcode,
-  //       destination_note: address.note,
-  //       courier_company: createOrderDto.courier_company,
-  //       courier_type: createOrderDto.courier_type,
-  //       delivery_type: createOrderDto.delivery_type,
-  //       items: product.map((item) => ({
-  //         name: item.product.name,
-  //         value: item.product.price,
-  //         quantity: 1,
-  //         weight: item.product.weight
-  //       }))
-  //     }, { headers: this.headers }).pipe(
-  //       map((res) => res.data),
-  //       catchError((error) => {
-  //         throw error;
-  //       }),
-  //     ),
-  //   );
+  // async paymentHandler(createOrderDto: CreateOrderDto) {
+  // const address = await this.userService.fetchAddress(createOrderDto.addressId)
+  // const product = await this.productService.findManyProductDetail(createOrderDto.productDetailId)
 
-  //   const result = await this.orderRepository.insert({
-  //     referenceId: order.id,
-  //     order_date: order.delivery.datetime,
-  //     receipt: order.courier.waybill_id,
-  //     status: order.status,
-  //     userId: address.user.id
-  //   })
+  // const order = await firstValueFrom(
+  //   this.httpService.post(`${this.baseUrl}/v1/orders`, {
+  //     origin_contact_name: origin_contact_name,
+  //     origin_contact_phone: origin_contact_phone,
+  //     origin_address: origin_address,
+  //     origin_postal_code: origin_postal_code,
+  //     destination_contact_name: address.contact_name,
+  //     destination_contact_phone: address.contact_number,
+  //     destination_address: address.address,
+  //     destination_postal_code: address.zipcode,
+  //     destination_note: address.note,
+  //     courier_company: createOrderDto.courier_company,
+  //     courier_type: createOrderDto.courier_type,
+  //     delivery_type: createOrderDto.delivery_type,
+  //     items: product.map((item) => ({
+  //       name: item.product.name,
+  //       value: item.product.price,
+  //       quantity: 1,
+  //       weight: item.product.weight
+  //     }))
+  //   }, { headers: this.biteshipHeader }).pipe(
+  //     map((res) => res.data),
+  //     catchError((error) => {
+  //       throw error;
+  //     }),
+  //   ),
+  // );
 
-  //   for (const detail of product) {
-  //     await this.orderItemRepository.insert({ orderId: result.identifiers[0].id, productDetailId: detail.id })
+  // const result = await this.orderRepository.insert({
+  //   referenceId: order.id,
+  //   order_date: order.delivery.datetime,
+  //   receipt: order.courier.waybill_id,
+  //   status: order.status,
+  //   userId: address.user.id
+  // })
+
+  // for (const detail of product) {
+  //   await this.orderItemRepository.insert({ orderId: result.identifiers[0].id, productDetailId: detail.id })
+  // }
+
+  // return await this.orderRepository.findOneOrFail({
+  //   where: {
+  //     id: result.identifiers[0].id
+  //   },
+  //   relations: {
+  //     orderItems: true
   //   }
-
-  //   return await this.orderRepository.findOneOrFail({
-  //     where: {
-  //       id: result.identifiers[0].id
-  //     },
-  //     relations: {
-  //       orderItems: true
-  //     }
-  //   });
+  // });
   // }
 
   async getRate(data: any) {
@@ -129,6 +150,82 @@ export class OrderService {
   async genPaymentToken(data: any) {
     const orderId = randomUUID();
 
+    const address = await this.userService.fetchAddress(
+      data.customer.defaultAddress,
+    );
+    const item = await this.productService.findProductDetail(
+      data.orderItems.id,
+    );
+
+    // return {
+    //   origin_contact_name: origin_contact_name,
+    //   origin_contact_phone: origin_contact_phone,
+    //   origin_address: origin_address,
+    //   origin_postal_code: origin_postal_code,
+    //   destination_contact_name: address.contact_name,
+    //   destination_contact_phone: '08170032123',
+    //   destination_address: address.address,
+    //   destination_postal_code: address.zipcode,
+    //   delivery: data.delivery,
+    //   courier_company: data.delivery.company,
+    //   courier_type: data.delivery.type,
+    //   delivery_type: "now",
+    //   items: {
+    //     name: item.product.name,
+    //     value: item.product.price,
+    //     quantity: 1,
+    //     weight: item.product.weight,
+    //   },
+    // }
+    const order = await firstValueFrom(
+      this.httpService
+        .post(
+          `${this.baseUrl}/v1/orders`,
+          {
+            origin_contact_name: origin_contact_name,
+            origin_contact_phone: origin_contact_phone,
+            origin_address: origin_address,
+            origin_postal_code: origin_postal_code,
+            destination_contact_name: address.contact_name,
+            destination_contact_phone: address.contact_number,
+            destination_address: address.address,
+            destination_postal_code: address.zipcode,
+            delivery: data.delivery,
+            courier_company: data.delivery.company,
+            courier_type: data.delivery.type,
+            delivery_type: 'now',
+            items: [
+              {
+                name: item.product.name,
+                value: item.product.price,
+                quantity: 1,
+                weight: item.product.weight,
+              },
+            ],
+          },
+          { headers: this.biteshipHeader },
+        )
+        .pipe(
+          map((res) => res.data),
+          catchError((error) => {
+            throw error;
+          }),
+        ),
+    );
+
+    const result = await this.orderRepository.insert({
+      referenceId: order.id,
+      order_date: order.delivery.datetime,
+      receipt: order.courier.waybill_id,
+      status: order.status,
+      userId: address.user.id,
+    });
+
+    await this.orderItemRepository.insert({
+      orderId: result.identifiers[0].id,
+      productDetailId: item.id,
+    });
+
     return await firstValueFrom(
       this.httpService
         .post(
@@ -136,7 +233,7 @@ export class OrderService {
           {
             transaction_details: {
               order_id: orderId,
-              gross_amount: data.orderTotal - data.orderShip + data.orderShip,
+              gross_amount: data.orderTotal + data.delivery.price,
             },
             item_details: [
               ...data.orderItems.map((item: any) => ({
@@ -149,7 +246,7 @@ export class OrderService {
               })),
               {
                 id: 'shipping',
-                price: data.orderShip,
+                price: data.delivery.price,
                 quantity: 1,
                 name: 'Shipping',
               },
@@ -163,7 +260,7 @@ export class OrderService {
               duration: 10,
               unit: 'minutes',
             },
-            custom_field: 'hayuuu',
+            custom_field1: 'order',
           },
           { headers: this.midtransHeader },
         )
@@ -177,7 +274,6 @@ export class OrderService {
   }
 
   async genBidPaymentToken(data: any) {
-
     return await firstValueFrom(
       this.httpService
         .post(
@@ -195,7 +291,7 @@ export class OrderService {
                 name: data.orderItems.productDetail.product.id,
                 brand: data.orderItems.productDetail.product.brand.id,
                 merchant_name: 'Walkway',
-              }
+              },
             ],
             customer_details: {
               first_name: data.customer.name,

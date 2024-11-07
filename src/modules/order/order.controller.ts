@@ -15,10 +15,10 @@ export class OrderController {
   //   }
   // }
 
-  // @Post('/payment')
-  // async midtransNotification(@Request() req) {
-  //   return await this.orderService.paymentHandler(req.body);
-  // }
+  @Post('/payment')
+  async midtransNotification(@Request() req: any) {
+    return await this.orderService.paymentHandler(req.body);
+  }
 
 
   @Post('/rates')

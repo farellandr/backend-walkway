@@ -73,6 +73,15 @@ export class UserService {
     });
   }
 
+  async fetchAddress(id: string) {
+    return await this.addressRepository.findOneOrFail({
+      where: { user: { defaultAddress: id } },
+      relations: {
+        user: true,
+      },
+    });
+  }
+
   async createAddress(createAddressDto: CreateAddressDto) {
     const user = await this.userRepository.findOneOrFail({
       where: { email: createAddressDto.email },

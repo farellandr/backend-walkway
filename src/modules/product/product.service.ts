@@ -176,6 +176,12 @@ export class ProductService {
   async findProductDetail(id: string) {
     return await this.productDetailRepository.findOneOrFail({
       where: { id },
+      relations: {
+        product: {
+          brand: true,
+          productPhotos: true
+        }
+      }
     });
   }
 
