@@ -216,10 +216,10 @@ export class ProductService {
       await this.userCartRepository.createCartItem(createCartItemDto);
     }
 
-    await this.productDetailRepository.save({
-      ...productDetail,
-      stock: productDetail.stock - 1,
-    });
+    // await this.productDetailRepository.save({
+    //   ...productDetail,
+    //   stock: productDetail.stock - 1,
+    // });
 
     return { message: 'Item added to cart successfully.' };
   }

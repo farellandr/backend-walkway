@@ -285,7 +285,9 @@ export class UserService {
       relations: {
         addresses: true,
         role: true,
-        cart: true,
+        cart: {
+          cartItems: true
+        }
       },
     });
 
@@ -296,6 +298,7 @@ export class UserService {
       role: user.role.name,
       defaultAddress: user.defaultAddress,
       cartId: user?.cart?.id || '',
+      cartItemTotal: user.cart.cartItems.length
     };
   }
 
