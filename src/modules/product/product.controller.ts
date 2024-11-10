@@ -166,7 +166,7 @@ export class ProductController {
   async getUserByToken(@Param('token') token: string) {
     const payload = jwtDecode(token);
     return {
-      data: [await this.productService.getCheckoutData(payload)],
+      data: await this.productService.getCheckoutData(payload),
       statusCode: HttpStatus.OK,
       message: 'success',
     };

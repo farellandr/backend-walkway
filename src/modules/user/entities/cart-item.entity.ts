@@ -20,7 +20,7 @@ export class CartItem {
   @Column({ type: 'uuid' })
   cartId: string;
 
-  @Column({ type: 'int' })
+  @Column({ type: 'int', nullable: true })
   quantity: number;
 
   @ManyToOne(() => ProductDetail, (productDetail) => productDetail.cartItem)

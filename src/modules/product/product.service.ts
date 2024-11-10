@@ -15,6 +15,7 @@ import { BidParticipant } from './entities/bid-participant.entity';
 import { ProductPhoto } from './entities/product-photo.entity';
 import { PhotoType } from '#/utils/enums/photo-types.enum';
 import { JwtService } from '@nestjs/jwt';
+import { CartItem } from '../user/entities/cart-item.entity';
 
 @Injectable()
 export class ProductService {
@@ -33,7 +34,7 @@ export class ProductService {
     private readonly categoryRepository: CategoryService,
     private readonly userCartRepository: UserService,
     private readonly jwtService: JwtService,
-  ) {}
+  ) { }
 
   async getBid(id: string) {
     return await this.bidProductRepository.findOneOrFail({
@@ -57,30 +58,43 @@ export class ProductService {
     });
   }
 
-  async getCheckoutData(data: any) {
-    const ids = data.data.data.map((id: any) => id.id); // Get the array of IDs
+  async getCheckoutData(res: any) {
+    const cartItem = res.data.map((id: any) => id.id)
 
-    // Perform a find query for multiple products based on the IDs
-    const products = await this.productDetailRepository.find({
-      where: {
-        id: In(ids), // `In` is used to find records matching any of the IDs
-      },
-      relations: {
-        product: {
-          productPhotos: true,
-          brand: true,
-        },
-      },
-    });
+    console.log(cartItem)
 
-    return products; // Return the list of products with their relations
+    if (cartItem) {
+      return await this.userCartRepository.finditems(cartItem)
+    } else {
+
+    }
+
+    // return res.data.map((id: any) => id.id); 
+    // const ids = res.data.data.map((id: any) => id.id); // Get the array of IDs
+
+    // // Perform a find query for multiple products based on the IDs
+    // const products = await this.productDetailRepository.find({
+    //   where: {
+    //     id: In(ids), // `In` is used to find records matching any of the IDs
+    //   },
+    //   relations: {
+    //     product: {
+    //       productPhotos: true,
+    //       brand: true,
+    //     },
+    //   },
+    // });
+
+    // return products; // Return the list of products with their relations
   }
 
-  async checkoutToken(data: ProductDetail) {
-    const payload = {
-      data,
-    };
-    return { checkout_token: this.jwtService.sign(payload) };
+  async checkoutToken(req: CartItem | any) {
+    // const payload = {
+    //   data,
+    // };
+    // return req.data
+
+    return { checkout_token: this.jwtService.sign({ data: req.data }) };
   }
 
   async participateBid(body: any) {

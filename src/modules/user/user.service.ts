@@ -30,7 +30,23 @@ export class UserService {
     private readonly productDetailRepository: Repository<ProductDetail>,
 
     private readonly roleRepository: RoleService,
-  ) {}
+  ) { }
+
+  async finditems(ids: string[]) {
+    return await this.cartItemRepository.find({
+      where: {
+        id: In(ids)
+      },
+      relations: {
+        productDetail: {
+          product: {
+            brand: true,
+            productPhotos: true
+          }
+        }
+      }
+    })
+  }
 
   async updateCartItem(cartItemId: string, quantity: number) {
     await this.cartItemRepository.findOneOrFail({
@@ -48,6 +64,7 @@ export class UserService {
       where: { id },
     });
   }
+
 
   async getCartItems(cartId: string) {
     return await this.cartItemRepository.find({
