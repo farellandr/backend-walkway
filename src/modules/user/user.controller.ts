@@ -23,6 +23,15 @@ import { UpdateAddressDto } from './dto/update-address.dto';
 export class UserController {
   constructor(private readonly userService: UserService) { }
 
+  @Get('/orders/:email')
+  async getOrderItems(@Param('email') email: string) {
+    return {
+      data: await this.userService.getOrderItems(email),
+      statusCode: HttpStatus.OK,
+      message: 'success',
+    };
+  }
+
   @Get('/cart/:id')
   async getCartItems(@Param('id') id: string) {
     return {

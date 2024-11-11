@@ -14,6 +14,7 @@ import { CreateAddressDto } from './dto/create-address.dto';
 import { Address } from './entities/address.entity';
 import { UpdateAddressDto } from './dto/update-address.dto';
 import { ProductDetail } from '../product/entities/product-detail.entity';
+import { Order } from '../order/entities/order.entity';
 
 @Injectable()
 export class UserService {
@@ -24,28 +25,31 @@ export class UserService {
     private readonly cartRepository: Repository<Cart>,
     @InjectRepository(CartItem)
     private readonly cartItemRepository: Repository<CartItem>,
+    @InjectRepository(Order)
+    private readonly orderRepository: Repository<Order>,
     @InjectRepository(Address)
     private readonly addressRepository: Repository<Address>,
     @InjectRepository(ProductDetail)
     private readonly productDetailRepository: Repository<ProductDetail>,
 
     private readonly roleRepository: RoleService,
-  ) { }
+  ) {}
 
   async finditems(ids: string[]) {
     return await this.cartItemRepository.find({
       where: {
-        id: In(ids)
+        id: In(ids),
       },
       relations: {
         productDetail: {
           product: {
             brand: true,
-            productPhotos: true
-          }
-        }
-      }
-    })
+            productPhotos: true,
+          },
+        },
+      },
+      withDeleted: true,
+    });
   }
 
   async updateCartItem(cartItemId: string, quantity: number) {
@@ -65,6 +69,34 @@ export class UserService {
     });
   }
 
+  async getOrderItems(email: string) {
+    return await this.orderRepository.find({
+      where: {
+        user: {
+          email: email,
+        },
+      },
+      relations: {
+        orderItems: {
+          productDetail: {
+            product: {
+              brand: true,
+              productPhotos: true
+            }
+          }
+        }
+      }
+      // relations: {
+      //   cart: true,
+      //   productDetail: {
+      //     product: {
+      //       brand: true,
+      //       productPhotos: true,
+      //     },
+      //   },
+      // },
+    });
+  }
 
   async getCartItems(cartId: string) {
     return await this.cartItemRepository.find({
@@ -204,9 +236,9 @@ export class UserService {
       where: { id },
       relations: {
         cartItems: {
-          productDetail: true
-        }
-      }
+          productDetail: true,
+        },
+      },
     });
   }
 
@@ -303,8 +335,8 @@ export class UserService {
         addresses: true,
         role: true,
         cart: {
-          cartItems: true
-        }
+          cartItems: true,
+        },
       },
     });
 
@@ -315,7 +347,7 @@ export class UserService {
       role: user.role.name,
       defaultAddress: user.defaultAddress,
       cartId: user?.cart?.id || '',
-      cartItemTotal: user.cart.cartItems.length
+      cartItemTotal: user.cart.cartItems.length,
     };
   }
 

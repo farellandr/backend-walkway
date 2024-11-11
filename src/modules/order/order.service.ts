@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Order } from './entities/order.entity';
@@ -15,7 +15,11 @@ import {
 import { UserService } from '../user/user.service';
 import { ProductService } from '../product/product.service';
 import { OrderItem } from './entities/order-item.entity';
-import { randomUUID } from 'crypto';
+import { createHash, randomUUID } from 'crypto';
+import { CartItem } from '../user/entities/cart-item.entity';
+import { OrderStatus } from '#/utils/enums/order-status.enum';
+import { JwtService } from '@nestjs/jwt';
+import { Cart } from '../user/entities/cart.entity';
 
 @Injectable()
 export class OrderService {
@@ -24,14 +28,20 @@ export class OrderService {
     private readonly orderRepository: Repository<Order>,
     @InjectRepository(OrderItem)
     private readonly orderItemRepository: Repository<OrderItem>,
+    @InjectRepository(Cart)
+    private readonly cartRepository: Repository<Cart>,
+    @InjectRepository(CartItem)
+    private readonly cartItemRepository: Repository<CartItem>,
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
     private readonly userService: UserService,
     private readonly productService: ProductService,
+    private readonly jwtService: JwtService,
   ) {}
 
   private baseUrl = this.configService.get<string>('biteship.url');
   private apiKey = this.configService.get<string>('biteship.secret');
+  private midtransServer = this.configService.get<string>('midtrans.server');
   private biteshipHeader = {
     Authorization: `Bearer ${this.apiKey}`,
     'Content-Type': 'application/json',
@@ -40,10 +50,6 @@ export class OrderService {
     Authorization: `Basic U0ItTWlkLXNlcnZlci1sZUJYOVJyWldyV2ptZFFZY1NfZG5NY246`,
     'Content-Type': 'application/json',
   };
-
-  async paymentHandler(body: any) {
-    return console.log(body);
-  }
 
   // {
   //   transaction_type: 'on-us',
@@ -66,60 +72,6 @@ export class OrderService {
   //   acquirer: 'gopay'
   // }
 
-  // async paymentHandler(createOrderDto: CreateOrderDto) {
-  // const address = await this.userService.fetchAddress(createOrderDto.addressId)
-  // const product = await this.productService.findManyProductDetail(createOrderDto.productDetailId)
-
-  // const order = await firstValueFrom(
-  //   this.httpService.post(`${this.baseUrl}/v1/orders`, {
-  //     origin_contact_name: origin_contact_name,
-  //     origin_contact_phone: origin_contact_phone,
-  //     origin_address: origin_address,
-  //     origin_postal_code: origin_postal_code,
-  //     destination_contact_name: address.contact_name,
-  //     destination_contact_phone: address.contact_number,
-  //     destination_address: address.address,
-  //     destination_postal_code: address.zipcode,
-  //     destination_note: address.note,
-  //     courier_company: createOrderDto.courier_company,
-  //     courier_type: createOrderDto.courier_type,
-  //     delivery_type: createOrderDto.delivery_type,
-  //     items: product.map((item) => ({
-  //       name: item.product.name,
-  //       value: item.product.price,
-  //       quantity: 1,
-  //       weight: item.product.weight
-  //     }))
-  //   }, { headers: this.biteshipHeader }).pipe(
-  //     map((res) => res.data),
-  //     catchError((error) => {
-  //       throw error;
-  //     }),
-  //   ),
-  // );
-
-  // const result = await this.orderRepository.insert({
-  //   referenceId: order.id,
-  //   order_date: order.delivery.datetime,
-  //   receipt: order.courier.waybill_id,
-  //   status: order.status,
-  //   userId: address.user.id
-  // })
-
-  // for (const detail of product) {
-  //   await this.orderItemRepository.insert({ orderId: result.identifiers[0].id, productDetailId: detail.id })
-  // }
-
-  // return await this.orderRepository.findOneOrFail({
-  //   where: {
-  //     id: result.identifiers[0].id
-  //   },
-  //   relations: {
-  //     orderItems: true
-  //   }
-  // });
-  // }
-
   async getRate(data: any) {
     return await firstValueFrom(
       this.httpService
@@ -130,8 +82,8 @@ export class OrderService {
             destination_postal_code: data.address.zipcode,
             couriers: 'anteraja,jne,sicepat,jnt,ninja,paxel,lalamove',
             items: data.product.map((item: any) => ({
-              name: item.product.name,
-              value: item.product.price,
+              name: item.productDetail.product.name,
+              value: item.productDetail.product.price,
               quantity: 1,
               weight: 600,
             })),
@@ -147,36 +99,72 @@ export class OrderService {
     );
   }
 
+  async paymentHandler(data: any) {
+    const order = await this.orderRepository.findOneOrFail({
+      where: { id: data.order_id },
+    });
+
+    console.log(order);
+
+    // const hash = createHash('sha512')
+    //   .update(
+    //     `${order.id}${data.status_code}${data.gross_amount}${this.midtransServer}`,
+    //   )
+    //   .digest('hex');
+
+    // if (data.signature_key !== hash) {
+    //   throw new HttpException(
+    //     {
+    //       statusCode: HttpStatus.UNAUTHORIZED,
+    //       error: 'Unauthorized',
+    //       message: 'Invalid signature key.',
+    //     },
+    //     HttpStatus.UNAUTHORIZED,
+    //   );
+    // }
+
+    // Get all order items for this order
+    const orderItems = await this.orderItemRepository.find({
+      where: { orderId: order.id },
+    });
+
+    // Get cart associated with the order's user
+    const cart = await this.cartRepository.findOneOrFail({
+      where: { userId: order.userId },
+    });
+
+    // Get all cart items for this cart
+    const cartItems = await this.cartItemRepository.find({
+      where: { cartId: cart.id },
+    });
+
+    // Create a Set of productDetailIds from order items
+    const orderedProductDetailIds = new Set(
+      orderItems.map((item) => item.productDetailId),
+    );
+
+    // Remove cart items that have matching productDetailIds with the order
+    for (const cartItem of cartItems) {
+      if (orderedProductDetailIds.has(cartItem.productDetailId)) {
+        await this.cartItemRepository.softDelete(cartItem.id);
+      }
+    }
+
+    console.log(orderItems, cart, cartItems);
+
+    return {
+      message: 'Payment processed and cart items removed successfully',
+      orderId: order.id,
+    };
+  }
+
   async genPaymentToken(data: any) {
     const orderId = randomUUID();
 
     const address = await this.userService.fetchAddress(
       data.customer.defaultAddress,
     );
-    const item = await this.productService.findProductDetail(
-      data.orderItems.id,
-    );
 
-    // return {
-    //   origin_contact_name: origin_contact_name,
-    //   origin_contact_phone: origin_contact_phone,
-    //   origin_address: origin_address,
-    //   origin_postal_code: origin_postal_code,
-    //   destination_contact_name: address.contact_name,
-    //   destination_contact_phone: '08170032123',
-    //   destination_address: address.address,
-    //   destination_postal_code: address.zipcode,
-    //   delivery: data.delivery,
-    //   courier_company: data.delivery.company,
-    //   courier_type: data.delivery.type,
-    //   delivery_type: "now",
-    //   items: {
-    //     name: item.product.name,
-    //     value: item.product.price,
-    //     quantity: 1,
-    //     weight: item.product.weight,
-    //   },
-    // }
     const order = await firstValueFrom(
       this.httpService
         .post(
@@ -195,12 +183,12 @@ export class OrderService {
             courier_type: data.delivery.type,
             delivery_type: 'now',
             items: [
-              {
-                name: item.product.name,
-                value: item.product.price,
-                quantity: 1,
-                weight: item.product.weight,
-              },
+              ...data.orderItems.map((item: CartItem) => ({
+                name: item.productDetail.product.name,
+                value: item.productDetail.product.price,
+                quantity: item.quantity,
+                weight: item.productDetail.product.weight,
+              })),
             ],
           },
           { headers: this.biteshipHeader },
@@ -214,6 +202,7 @@ export class OrderService {
     );
 
     const result = await this.orderRepository.insert({
+      id: orderId,
       referenceId: order.id,
       order_date: order.delivery.datetime,
       receipt: order.courier.waybill_id,
@@ -221,10 +210,12 @@ export class OrderService {
       userId: address.user.id,
     });
 
-    await this.orderItemRepository.insert({
-      orderId: result.identifiers[0].id,
-      productDetailId: item.id,
-    });
+    for (const detail of data.orderItems) {
+      await this.orderItemRepository.insert({
+        orderId: result.identifiers[0].id,
+        productDetailId: detail.productDetail.id,
+      });
+    }
 
     return await firstValueFrom(
       this.httpService
@@ -236,16 +227,16 @@ export class OrderService {
               gross_amount: data.orderTotal + data.delivery.price,
             },
             item_details: [
-              ...data.orderItems.map((item: any) => ({
-                id: item.product.id,
-                price: item.product.price,
-                quantity: 1,
-                name: item.product.name,
-                brand: item.product.brand.name,
+              ...data.orderItems.map((item: CartItem) => ({
+                id: item.productDetail.product.id,
+                price: item.productDetail.product.price,
+                quantity: item.quantity,
+                name: item.productDetail.product.name,
+                brand: item.productDetail.product.brand.name,
                 merchant_name: 'Walkway',
               })),
               {
-                id: 'shipping',
+                id: 100,
                 price: data.delivery.price,
                 quantity: 1,
                 name: 'Shipping',
@@ -258,9 +249,9 @@ export class OrderService {
             },
             page_expiry: {
               duration: 10,
-              unit: 'minutes',
+              unit: 'minute',
             },
-            custom_field1: 'order',
+            // custom_field1: 'order',
           },
           { headers: this.midtransHeader },
         )

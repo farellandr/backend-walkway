@@ -61,8 +61,6 @@ export class ProductService {
   async getCheckoutData(res: any) {
     const cartItem = res.data.map((id: any) => id.id)
 
-    console.log(cartItem)
-
     if (cartItem) {
       return await this.userCartRepository.finditems(cartItem)
     } else {

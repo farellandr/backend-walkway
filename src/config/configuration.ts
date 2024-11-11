@@ -20,6 +20,10 @@ export default () => {
     biteship: {
       url: process.env.BITESHIP_URL || '',
       secret: process.env.BITESHIP_SECRET || ''
+    },
+    midtrans: {
+      client: process.env.MIDTRANS_CLIENT || '',
+      server: process.env.MIDTRANS_SERVER || ''
     }
   };
 };

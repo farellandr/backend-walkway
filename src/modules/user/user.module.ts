@@ -8,10 +8,11 @@ import { Cart } from './entities/cart.entity';
 import { CartItem } from './entities/cart-item.entity';
 import { Address } from './entities/address.entity';
 import { ProductDetail } from '../product/entities/product-detail.entity';
+import { Order } from '../order/entities/order.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Cart, CartItem, Address, ProductDetail]),
+    TypeOrmModule.forFeature([User, Cart, CartItem, Address, ProductDetail, Order]),
     RoleModule
   ],
   controllers: [UserController],
