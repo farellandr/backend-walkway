@@ -50,6 +50,16 @@ export class UserController {
     };
   }
 
+  @Post('/reduce-item')
+  async reduceQty(@Body() data: any) {
+    return {
+      data: await this.userService.createAddress(data),
+      statusCode: HttpStatus.CREATED,
+      message: 'success',
+    };
+  }
+
+
   @Post('add-address')
   async createAddress(@Body() createAddressDto: CreateAddressDto) {
     return {

@@ -34,7 +34,7 @@ export class ProductService {
     private readonly categoryRepository: CategoryService,
     private readonly userCartRepository: UserService,
     private readonly jwtService: JwtService,
-  ) { }
+  ) {}
 
   async getBid(id: string) {
     return await this.bidProductRepository.findOneOrFail({
@@ -59,31 +59,30 @@ export class ProductService {
   }
 
   async getCheckoutData(res: any) {
-    const cartItem = res.data.map((id: any) => id.id)
+    const cartItem = res.data.map((id: any) => id.id);
+    const isFromCart = await this.userCartRepository.finditems(cartItem);
 
-    if (cartItem) {
-      return await this.userCartRepository.finditems(cartItem)
+    if (isFromCart.length > 0) {
+      return isFromCart;
     } else {
+      const data = await this.productDetailRepository.findOneOrFail({
+        where: { id: res.data[0].id },
+        relations: {
+          product: {
+            brand: true,
+            productPhotos: true,
+          },
+        },
+      });
 
+      return [
+        {
+          quantity: res.data[0].quantity,
+          productDetailId: data.id,
+          productDetail: data,
+        },
+      ];
     }
-
-    // return res.data.map((id: any) => id.id); 
-    // const ids = res.data.data.map((id: any) => id.id); // Get the array of IDs
-
-    // // Perform a find query for multiple products based on the IDs
-    // const products = await this.productDetailRepository.find({
-    //   where: {
-    //     id: In(ids), // `In` is used to find records matching any of the IDs
-    //   },
-    //   relations: {
-    //     product: {
-    //       productPhotos: true,
-    //       brand: true,
-    //     },
-    //   },
-    // });
-
-    // return products; // Return the list of products with their relations
   }
 
   async checkoutToken(req: CartItem | any) {
@@ -100,27 +99,42 @@ export class ProductService {
       this.bidProductRepository.findOneOrFail({
         where: { id: body.bidProductId },
       }),
-      this.userCartRepository.findOne(body.userId),
+      this.userCartRepository.findEmail(body.userEmail),
     ]);
 
-    const result = await this.bidParticipantRepository.insert({
-      bidProductId: bidProduct.id,
-      userId: user.id,
-      amount: body.amount,
-    });
-    return await this.bidParticipantRepository.findOneOrFail({
+    const isBid = await this.bidParticipantRepository.findOne({
       where: {
-        id: result.identifiers[0].id,
-      },
-      relations: {
-        bidProduct: {
-          productDetail: {
-            product: true,
-          },
-        },
-        user: true,
+        bidProductId: bidProduct.id,
+        userId: user.id,
       },
     });
+
+    if (!isBid) {
+      await this.bidParticipantRepository.insert({
+        bidProductId: bidProduct.id,
+        userId: user.id,
+        amount: body.bidAmount,
+      });
+    } else {
+      await this.bidParticipantRepository.update(isBid.id, {
+        amount: body.bidAmount,
+      });
+    }
+
+    return isBid;
+    // return await this.bidParticipantRepository.findOneOrFail({
+    //   where: {
+    //     id: result.identifiers[0].id,
+    //   },
+    //   relations: {
+    //     bidProduct: {
+    //       productDetail: {
+    //         product: true,
+    //       },
+    //     },
+    //     user: true,
+    //   },
+    // });
   }
 
   async addToBid(createBidProductDto: CreateBidProductDto) {
@@ -191,9 +205,9 @@ export class ProductService {
       relations: {
         product: {
           brand: true,
-          productPhotos: true
-        }
-      }
+          productPhotos: true,
+        },
+      },
     });
   }
 
@@ -219,12 +233,22 @@ export class ProductService {
     );
 
     if (existingCartItem) {
-      await this.userCartRepository.updateCartItem(
-        existingCartItem.id,
-        existingCartItem.quantity + 1,
-      );
+      if (
+        existingCartItem.quantity + createCartItemDto.quantity ||
+        1 > existingCartItem.productDetail.stock
+      ) {
+        await this.userCartRepository.updateCartItem(
+          existingCartItem.id,
+          existingCartItem.productDetail.stock,
+        );
+      } else {
+        await this.userCartRepository.updateCartItem(
+          existingCartItem.id,
+          existingCartItem.quantity + createCartItemDto.quantity || 1,
+        );
+      }
     } else {
-      createCartItemDto.quantity = 1;
+      createCartItemDto.quantity = createCartItemDto.quantity || 1;
       await this.userCartRepository.createCartItem(createCartItemDto);
     }
 
@@ -342,6 +366,9 @@ export class ProductService {
         productDetails: true,
         categories: true,
         productPhotos: true,
+      },
+      order: {
+        updatedAt: 'DESC',
       },
     });
   }

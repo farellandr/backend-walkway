@@ -81,11 +81,11 @@ export class UserService {
           productDetail: {
             product: {
               brand: true,
-              productPhotos: true
-            }
-          }
-        }
-      }
+              productPhotos: true,
+            },
+          },
+        },
+      },
       // relations: {
       //   cart: true,
       //   productDetail: {
@@ -129,6 +129,17 @@ export class UserService {
         user: true,
       },
     });
+  }
+
+  async reduce(body: any) {
+    const cart = await this.cartItemRepository.findOneOrFail({
+      where: { id: body.id },
+    });
+
+    return await this.cartItemRepository.update(cart.id, {
+      quantity: cart.quantity - 1,
+    });
+    // return this.cartItemRepository.update(body.id, { quantity: })
   }
 
   async createAddress(createAddressDto: CreateAddressDto) {
@@ -340,15 +351,24 @@ export class UserService {
       },
     });
 
-    return {
-      name: user.name,
-      email: user.email,
-      phone_number: user.phone_number,
-      role: user.role.name,
-      defaultAddress: user.defaultAddress,
-      cartId: user?.cart?.id || '',
-      cartItemTotal: user.cart.cartItems.length,
-    };
+    if (user.role.name == 'user') {
+      return {
+        name: user.name,
+        email: user.email,
+        phone_number: user.phone_number,
+        role: user.role.name,
+        defaultAddress: user.defaultAddress,
+        cartId: user?.cart?.id || '',
+        cartItemTotal: user.cart.cartItems.length,
+      };
+    } else {
+      return {
+        name: user.name,
+        email: user.email,
+        phone_number: user.phone_number,
+        role: user.role.name,
+      };
+    }
   }
 
   async findOne(id: string) {
