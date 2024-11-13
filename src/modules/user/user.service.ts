@@ -131,15 +131,36 @@ export class UserService {
     });
   }
 
+  async removeItem(body: any) {
+    const cart = await this.cartItemRepository.find({
+      where: { id: In(body.cartId) },
+    });
+
+    for (const item of cart) {
+      await this.cartItemRepository.softDelete(item.id);
+    }
+
+    return true
+  }
+
+  async add(body: any) {
+    const cart = await this.cartItemRepository.findOneOrFail({
+      where: { id: body.cartId },
+    });
+
+    return await this.cartItemRepository.update(cart.id, {
+      quantity: cart.quantity + 1,
+    });
+  }
+
   async reduce(body: any) {
     const cart = await this.cartItemRepository.findOneOrFail({
-      where: { id: body.id },
+      where: { id: body.cartId },
     });
 
     return await this.cartItemRepository.update(cart.id, {
       quantity: cart.quantity - 1,
     });
-    // return this.cartItemRepository.update(body.id, { quantity: })
   }
 
   async createAddress(createAddressDto: CreateAddressDto) {

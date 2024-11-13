@@ -21,7 +21,7 @@ import { UpdateAddressDto } from './dto/update-address.dto';
 
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) { }
+  constructor(private readonly userService: UserService) {}
 
   @Get('/orders/:email')
   async getOrderItems(@Param('email') email: string) {
@@ -50,15 +50,32 @@ export class UserController {
     };
   }
 
-  @Post('/reduce-item')
-  async reduceQty(@Body() data: any) {
+  @Post('/add-item')
+  async addQty(@Body() data: any) {
     return {
-      data: await this.userService.createAddress(data),
+      data: await this.userService.add(data),
       statusCode: HttpStatus.CREATED,
       message: 'success',
     };
   }
 
+  @Post('/reduce-item')
+  async reduceQty(@Body() data: any) {
+    return {
+      data: await this.userService.reduce(data),
+      statusCode: HttpStatus.CREATED,
+      message: 'success',
+    };
+  }
+
+  @Post('/remove-item')
+  async removeQty(@Body() data: any) {
+    await this.userService.removeItem(data);
+    return {
+      statusCode: HttpStatus.CREATED,
+      message: 'success',
+    };
+  }
 
   @Post('add-address')
   async createAddress(@Body() createAddressDto: CreateAddressDto) {
