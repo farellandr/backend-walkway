@@ -1,5 +1,6 @@
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { User } from "./user.entity";
+import { Order } from "#/modules/order/entities/order.entity";
 
 @Entity()
 export class Address {
@@ -34,6 +35,9 @@ export class Address {
   user: User;
   @Column('uuid')
   userId: string;
+
+  @OneToMany(() => Order, (order) => order.address)
+  orders: Order;
 
   @CreateDateColumn({
     type: 'timestamp with time zone',

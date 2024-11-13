@@ -3,7 +3,7 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './entities/product.entity';
-import { Between, ILike, In, Like, Repository } from 'typeorm';
+import { Between, ILike, In, LessThanOrEqual, Like, Repository } from 'typeorm';
 import { BrandService } from '../brand/brand.service';
 import { ProductDetail } from './entities/product-detail.entity';
 import { CategoryService } from '../category/category.service';
@@ -16,6 +16,8 @@ import { ProductPhoto } from './entities/product-photo.entity';
 import { PhotoType } from '#/utils/enums/photo-types.enum';
 import { JwtService } from '@nestjs/jwt';
 import { CartItem } from '../user/entities/cart-item.entity';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { Logger } from 'nestjs-pino';
 
 @Injectable()
 export class ProductService {
@@ -34,7 +36,109 @@ export class ProductService {
     private readonly categoryRepository: CategoryService,
     private readonly userCartRepository: UserService,
     private readonly jwtService: JwtService,
+    private readonly logger: Logger,
   ) {}
+
+  @Cron('* * * * * *')
+  async handleEndedAuctions() {
+    try {
+      const now = new Date();
+      const startOfMinute = new Date(now.setSeconds(0, 0));
+      const endOfMinute = new Date(now.setSeconds(59, 999));
+
+      const justEndedAuctions = await this.bidProductRepository.find({
+        where: {
+          end_date: Between(startOfMinute, endOfMinute),
+          deletedAt: null,
+          isEnded: false,
+        },
+        relations: {
+          bidParticipants: {
+            user: {
+              addresses: true,
+            },
+          },
+          productDetail: {
+            product: {
+              brand: true,
+              productPhotos: true,
+            },
+          },
+        },
+      });
+
+      this.logger.debug(
+        `Found ${justEndedAuctions.length} unprocessed auctions ending this minute`,
+      );
+
+      for (const auction of justEndedAuctions) {
+        try {
+          if (
+            !auction.bidParticipants ||
+            auction.bidParticipants.length === 0
+          ) {
+            this.logger.warn({
+              msg: 'Auction ended with no participants',
+              auctionId: auction.id,
+              productId: auction.productDetail?.product?.id,
+              endTime: auction.end_date,
+            });
+
+            await this.bidProductRepository.update(auction.id, {
+              isEnded: true,
+            });
+            continue;
+          }
+
+          const highestBidder = auction.bidParticipants.reduce(
+            (highest, current) => {
+              if (!highest) return current;
+              return highest.amount > current.amount ? highest : current;
+            },
+          );
+
+          if (highestBidder) {
+            this.logger.log({
+              msg: 'Auction just ended - Winner determined',
+              auctionId: auction.id,
+              endTime: auction.end_date,
+              productDetails: {
+                id: auction.productDetail?.product?.id,
+                name: auction.productDetail?.product?.name,
+                brand: auction.productDetail?.product?.brand?.name,
+              },
+              winningBid: {
+                amount: highestBidder.amount,
+                timestamp: highestBidder.createdAt,
+              },
+              winner: {
+                userId: highestBidder.user?.id,
+                name: highestBidder.user?.name,
+                email: highestBidder.user?.email,
+                address: highestBidder.user?.defaultAddress,
+              },
+            });
+
+            await this.bidProductRepository.update(auction.id, {
+              isEnded: true,
+            });
+          }
+        } catch (auctionError) {
+          this.logger.error({
+            msg: 'Error processing newly ended auction',
+            error: auctionError,
+            auctionId: auction.id,
+            endTime: auction.end_date,
+          });
+        }
+      }
+    } catch (error) {
+      this.logger.error({
+        msg: 'Failed to process newly ended auctions',
+        error,
+      });
+    }
+  }
 
   async getBid(id: string) {
     return await this.bidProductRepository.findOneOrFail({
@@ -444,7 +548,7 @@ export class ProductService {
       this.brandRepository.findOne(updateProductDto.brandId),
       this.categoryRepository.findMany(categoryId),
     ]);
-    product.name = brand.name + ' ' + product.name;
+    product.name = product.name;
     product.categories = category;
 
     await this.productRepository.save(product);

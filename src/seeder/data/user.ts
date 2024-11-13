@@ -21,6 +21,5 @@ export const userMasterData: User[] = [
     bidParticipants: [],
     status: Status.ACTIVE,
     cart: {} as Cart,
-    orders: []
   }
 ]

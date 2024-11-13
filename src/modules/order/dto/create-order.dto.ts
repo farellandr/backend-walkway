@@ -21,4 +21,8 @@ export class CreateOrderDto {
   @IsNotEmpty()
   @IsString()
   delivery_type: string;
+
+  @IsNotEmpty()
+  @IsString()
+  order_total: number;
 }

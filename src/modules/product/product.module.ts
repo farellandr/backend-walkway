@@ -12,6 +12,7 @@ import { BidParticipant } from './entities/bid-participant.entity';
 import { ProductPhoto } from './entities/product-photo.entity';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { LoggerModule } from 'nestjs-pino';
 
 @Module({
   imports: [
@@ -28,6 +29,19 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     CategoryModule,
     UserModule,
     JwtModule,
+    LoggerModule.forRoot({
+      pinoHttp: {
+        transport: {
+          target: 'pino-pretty',
+          options: {
+            levelFirst: true,
+            translateTime: "UTC:yyyy-mm-dd'T'HH:MM:ss'Z'",
+            colorize: true,
+          },
+        },
+        level: process.env.NODE_ENV !== 'production' ? 'debug' : 'info',
+      },
+    }),
   ],
   controllers: [ProductController],
   providers: [ProductService],

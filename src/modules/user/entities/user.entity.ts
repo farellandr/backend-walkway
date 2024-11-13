@@ -51,9 +51,6 @@ export class User {
   @OneToOne(() => Cart, (cart) => cart.user, { nullable: true })
   cart: Cart;
 
-  @OneToMany(() => Order, (order) => order.user, { nullable: true })
-  orders: Order[];
-
   @OneToMany(() => Payment, (payment) => payment.user)
   payments: Payment[];
 

@@ -29,6 +29,9 @@ export class BidProduct {
   @OneToMany(() => BidParticipant, (bidParticipant) => bidParticipant.bidProduct)
   bidParticipants: BidParticipant[];
 
+  @Column({ default: false })
+  isEnded: boolean;
+
   @CreateDateColumn({
     type: 'timestamp with time zone',
     nullable: false,

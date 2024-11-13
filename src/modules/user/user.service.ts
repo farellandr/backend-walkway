@@ -72,8 +72,8 @@ export class UserService {
   async getOrderItems(email: string) {
     return await this.orderRepository.find({
       where: {
-        user: {
-          email: email,
+        address: {
+          user: { email },
         },
       },
       relations: {
@@ -140,7 +140,7 @@ export class UserService {
       await this.cartItemRepository.softDelete(item.id);
     }
 
-    return true
+    return true;
   }
 
   async add(body: any) {

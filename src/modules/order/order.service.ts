@@ -130,7 +130,7 @@ export class OrderService {
 
     // Get cart associated with the order's user
     const cart = await this.cartRepository.findOneOrFail({
-      where: { userId: order.userId },
+      where: { userId: order.address.userId },
     });
 
     // Get all cart items for this cart
@@ -207,7 +207,8 @@ export class OrderService {
       order_date: order.delivery.datetime,
       receipt: order.courier.waybill_id,
       status: order.status,
-      userId: address.user.id,
+      addressId: address.id,
+      order_total: data.orderTotal + data.delivery.price
     });
 
     for (const detail of data.orderItems) {
@@ -307,19 +308,34 @@ export class OrderService {
   }
 
   async findAll() {
-    const response = await firstValueFrom(
-      this.httpService
-        .get(`${this.baseUrl}/v2/orders?test_data=true`, {
-          headers: this.biteshipHeader,
-        })
-        .pipe(
-          map((res) => res.data),
-          catchError((error) => {
-            throw error;
-          }),
-        ),
-    );
-    return response;
+    return this.orderRepository.find({
+      relations: {
+        orderItems: {
+          productDetail: {
+            product: {
+              brand: true,
+              productPhotos: true,
+            },
+          },
+        },
+        address: {
+          user: true
+        }
+      },
+    });
+    // const response = await firstValueFrom(
+    //   this.httpService
+    //     .get(`${this.baseUrl}/v2/orders?test_data=true`, {
+    //       headers: this.biteshipHeader,
+    //     })
+    //     .pipe(
+    //       map((res) => res.data),
+    //       catchError((error) => {
+    //         throw error;
+    //       }),
+    //     ),
+    // );
+    // return response;
   }
 
   async findOne(id: string) {

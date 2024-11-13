@@ -1,7 +1,17 @@
-import { OrderStatus } from "#/utils/enums/order-status.enum";
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { OrderItem } from "./order-item.entity";
-import { User } from "#/modules/user/entities/user.entity";
+import { OrderStatus } from '#/utils/enums/order-status.enum';
+import {
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { OrderItem } from './order-item.entity';
+import { User } from '#/modules/user/entities/user.entity';
+import { Address } from '#/modules/user/entities/address.entity';
 
 @Entity()
 export class Order {
@@ -9,28 +19,36 @@ export class Order {
   id: string;
 
   @Column({ type: 'varchar', length: 24 })
-  referenceId: string
+  referenceId: string;
 
   @Column({
     type: 'timestamp with time zone',
-    default: () => 'CURRENT_TIMESTAMP'
+    default: () => 'CURRENT_TIMESTAMP',
   })
   order_date: Date;
-  
+
+  @Column({ type: 'int' })
+  order_total: number;
+
   @Column({ type: 'varchar', length: 255 })
   receipt: string;
 
   @Column({
     type: 'enum',
     enum: OrderStatus,
-    default: OrderStatus.ON_HOLD
+    default: OrderStatus.ON_HOLD,
   })
   status: OrderStatus;
 
-  @ManyToOne(() => User, (user) => user.orders)
-  user: User;
+  @ManyToOne(() => Address, (address) => address.orders)
+  address: Address;
   @Column('uuid')
-  userId: string;
+  addressId: string;
+
+  // @ManyToOne(() => User, (user) => user.orders)
+  // user: User;
+  // @Column('uuid')
+  // userId: string;
 
   @OneToMany(() => OrderItem, (orderItems) => orderItems.order)
   orderItems: OrderItem[];
