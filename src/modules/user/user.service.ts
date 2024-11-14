@@ -85,6 +85,9 @@ export class UserService {
             },
           },
         },
+        address: {
+          user: true
+        }
       },
       // relations: {
       //   cart: true,

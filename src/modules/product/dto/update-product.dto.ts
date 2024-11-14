@@ -31,7 +31,7 @@ export class UpdateProductDto {
   @Type(() => UpdateProductDetailDto)
   productDetails: UpdateProductDetailDto[];
 
-  @IsOptional()
+  @IsNotEmpty()
   @IsEnum(Status)
-  status?: Status;
+  status: Status;
 }

@@ -30,6 +30,15 @@ export class OrderController {
     }
   }
 
+  @Post('/generate-link')
+  async genLink(@Body() data: any) {
+    return {
+      data: await this.orderService.genPaymentLink(data),
+      statusCode: HttpStatus.CREATED,
+      message: 'success'
+    }
+  }
+
   @Post('/generate-token')
   async genToken(@Body() data: any) {
     return {

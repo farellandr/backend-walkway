@@ -36,7 +36,7 @@ export class OrderService {
     private readonly configService: ConfigService,
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
-  ) { }
+  ) {}
 
   private baseUrl = this.configService.get<string>('biteship.url');
   private apiKey = this.configService.get<string>('biteship.secret');
@@ -46,6 +46,11 @@ export class OrderService {
     'Content-Type': 'application/json',
   };
   private midtransHeader = {
+    Authorization: `Basic U0ItTWlkLXNlcnZlci1sZUJYOVJyWldyV2ptZFFZY1NfZG5NY246`,
+    'Content-Type': 'application/json',
+  };
+  private midtransLinkHeader = {
+    Accept: 'application/json',
     Authorization: `Basic U0ItTWlkLXNlcnZlci1sZUJYOVJyWldyV2ptZFFZY1NfZG5NY246`,
     'Content-Type': 'application/json',
   };
@@ -70,8 +75,6 @@ export class OrderService {
   //   currency: 'IDR',
   //   acquirer: 'gopay'
   // }
-
-
 
   async getRate(data: any) {
     return await firstValueFrom(
@@ -161,7 +164,6 @@ export class OrderService {
 
   async genPaymentLink(data: any) {
     const orderId = randomUUID();
-
     const address = await this.userService.fetchAddress(
       data.user.defaultAddress,
     );
@@ -180,13 +182,13 @@ export class OrderService {
             destination_address: address.address,
             destination_postal_code: address.zipcode,
             delivery: data.delivery,
-            courier_company: "jne",
-            courier_type: "reg",
+            courier_company: 'jne',
+            courier_type: 'reg',
             delivery_type: 'now',
             items: [
               ...data.orderItems.map((item: CartItem) => ({
                 name: item.productDetail.product.name,
-                value: item.productDetail.product.price,
+                value: data.orderTotal,
                 quantity: 1,
                 weight: item.productDetail.product.weight,
               })),
@@ -209,7 +211,7 @@ export class OrderService {
       receipt: order.courier.waybill_id,
       status: order.status,
       addressId: address.id,
-      order_total: data.orderTotal
+      order_total: data.orderTotal,
     });
 
     for (const detail of data.orderItems) {
@@ -227,14 +229,14 @@ export class OrderService {
             transaction_details: {
               order_id: orderId,
               gross_amount: data.orderTotal,
-              payment_link_id: orderId
+              // payment_link_id: data.orderItems[0].productDetail.product.id
             },
             customer_required: true,
             usage_limit: 1,
             item_details: [
               ...data.orderItems.map((item: CartItem) => ({
                 id: item.productDetail.product.id,
-                price: item.productDetail.product.price,
+                price: data.orderTotal,
                 quantity: 1,
                 name: item.productDetail.product.name,
                 brand: item.productDetail.product.brand.name,
@@ -242,9 +244,9 @@ export class OrderService {
               })),
             ],
             customer_details: {
-              first_name: data.customer.name,
-              email: data.customer.email,
-              phone: data.customer.phone_number,
+              first_name: data.user.name,
+              email: data.user.email,
+              phone: data.user.phone_number,
             },
             expiry: {
               duration: 3,
@@ -252,7 +254,7 @@ export class OrderService {
             },
             // custom_field1: 'order',
           },
-          { headers: this.midtransHeader },
+          { headers: this.midtransLinkHeader },
         )
         .pipe(
           map((res) => res.data),
@@ -313,7 +315,7 @@ export class OrderService {
       receipt: order.courier.waybill_id,
       status: order.status,
       addressId: address.id,
-      order_total: data.orderTotal + data.delivery.price
+      order_total: data.orderTotal + data.delivery.price,
     });
 
     for (const detail of data.orderItems) {
@@ -424,9 +426,12 @@ export class OrderService {
           },
         },
         address: {
-          user: true
-        }
+          user: true,
+        },
       },
+      order: {
+        createdAt: 'desc'
+      }
     });
     // const response = await firstValueFrom(
     //   this.httpService

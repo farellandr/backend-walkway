@@ -40,10 +40,10 @@ export class ProductService {
     private readonly userCartRepository: UserService,
     private readonly jwtService: JwtService,
     private readonly logger: Logger,
-    private readonly mailerService: MailerService
-  ) { }
+    private readonly mailerService: MailerService,
+  ) {}
 
-  @Cron('* * * * * *')
+  @Cron('*/5 * * * * *')
   async handleEndedAuctions() {
     try {
       const now = new Date();
@@ -102,13 +102,11 @@ export class ProductService {
           );
 
           if (highestBidder) {
-            // const link = await this.orderRepository.genPaymentLink({
-            //   user: highestBidder.user,
-            //   orderItems: [justEndedAuctions[0]],
-            //   orderTotal: highestBidder.amount
-            // })
-
-            // console.log(link)
+            const payment = await this.orderRepository.genPaymentLink({
+              user: highestBidder.user,
+              orderItems: [justEndedAuctions[0]],
+              orderTotal: highestBidder.amount,
+            });
 
             await this.mailerService.sendMail({
               to: highestBidder.user.email,
@@ -116,10 +114,11 @@ export class ProductService {
               template: 'auction-winner',
               context: {
                 name: highestBidder.user.name,
-                productName: auction.productDetail.product.name,
+                productName: `${auction.productDetail.product.brand.name} ${auction.productDetail.product.name}`,
                 brandName: auction.productDetail.product.brand.name,
                 amount: highestBidder.amount.toLocaleString('en-US'),
-                // link: link
+                walkwayLogo: `http://localhost:3222/brand/uploads/walkway.png`,
+                link: payment.payment_url,
               },
             });
 
@@ -144,9 +143,9 @@ export class ProductService {
               },
             });
 
-            // await this.bidProductRepository.update(auction.id, {
-            //   isEnded: true,
-            // });
+            await this.bidProductRepository.update(auction.id, {
+              isEnded: true,
+            });
           }
         } catch (auctionError) {
           this.logger.error({
@@ -575,6 +574,7 @@ export class ProductService {
     ]);
     product.name = product.name;
     product.categories = category;
+    product.status = updateProductDto.status;
 
     await this.productRepository.save(product);
 
