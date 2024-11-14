@@ -18,6 +18,8 @@ import { JwtService } from '@nestjs/jwt';
 import { CartItem } from '../user/entities/cart-item.entity';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { Logger } from 'nestjs-pino';
+import { OrderService } from '../order/order.service';
+import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class ProductService {
@@ -32,12 +34,14 @@ export class ProductService {
     private readonly bidProductRepository: Repository<BidProduct>,
     @InjectRepository(BidParticipant)
     private readonly bidParticipantRepository: Repository<BidParticipant>,
+    private readonly orderRepository: OrderService,
     private readonly brandRepository: BrandService,
     private readonly categoryRepository: CategoryService,
     private readonly userCartRepository: UserService,
     private readonly jwtService: JwtService,
     private readonly logger: Logger,
-  ) {}
+    private readonly mailerService: MailerService
+  ) { }
 
   @Cron('* * * * * *')
   async handleEndedAuctions() {
@@ -98,6 +102,27 @@ export class ProductService {
           );
 
           if (highestBidder) {
+            // const link = await this.orderRepository.genPaymentLink({
+            //   user: highestBidder.user,
+            //   orderItems: [justEndedAuctions[0]],
+            //   orderTotal: highestBidder.amount
+            // })
+
+            // console.log(link)
+
+            await this.mailerService.sendMail({
+              to: highestBidder.user.email,
+              subject: 'Congratulations! You Won the Auction',
+              template: 'auction-winner',
+              context: {
+                name: highestBidder.user.name,
+                productName: auction.productDetail.product.name,
+                brandName: auction.productDetail.product.brand.name,
+                amount: highestBidder.amount.toLocaleString('en-US'),
+                // link: link
+              },
+            });
+
             this.logger.log({
               msg: 'Auction just ended - Winner determined',
               auctionId: auction.id,
@@ -119,9 +144,9 @@ export class ProductService {
               },
             });
 
-            await this.bidProductRepository.update(auction.id, {
-              isEnded: true,
-            });
+            // await this.bidProductRepository.update(auction.id, {
+            //   isEnded: true,
+            // });
           }
         } catch (auctionError) {
           this.logger.error({

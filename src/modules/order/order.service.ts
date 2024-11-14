@@ -35,9 +35,8 @@ export class OrderService {
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
     private readonly userService: UserService,
-    private readonly productService: ProductService,
     private readonly jwtService: JwtService,
-  ) {}
+  ) { }
 
   private baseUrl = this.configService.get<string>('biteship.url');
   private apiKey = this.configService.get<string>('biteship.secret');
@@ -71,6 +70,8 @@ export class OrderService {
   //   currency: 'IDR',
   //   acquirer: 'gopay'
   // }
+
+
 
   async getRate(data: any) {
     return await firstValueFrom(
@@ -156,6 +157,110 @@ export class OrderService {
       message: 'Payment processed and cart items removed successfully',
       orderId: order.id,
     };
+  }
+
+  async genPaymentLink(data: any) {
+    const orderId = randomUUID();
+
+    const address = await this.userService.fetchAddress(
+      data.user.defaultAddress,
+    );
+
+    const order = await firstValueFrom(
+      this.httpService
+        .post(
+          `${this.baseUrl}/v1/orders`,
+          {
+            origin_contact_name: origin_contact_name,
+            origin_contact_phone: origin_contact_phone,
+            origin_address: origin_address,
+            origin_postal_code: origin_postal_code,
+            destination_contact_name: address.contact_name,
+            destination_contact_phone: address.contact_number,
+            destination_address: address.address,
+            destination_postal_code: address.zipcode,
+            delivery: data.delivery,
+            courier_company: "jne",
+            courier_type: "reg",
+            delivery_type: 'now',
+            items: [
+              ...data.orderItems.map((item: CartItem) => ({
+                name: item.productDetail.product.name,
+                value: item.productDetail.product.price,
+                quantity: 1,
+                weight: item.productDetail.product.weight,
+              })),
+            ],
+          },
+          { headers: this.biteshipHeader },
+        )
+        .pipe(
+          map((res) => res.data),
+          catchError((error) => {
+            throw error;
+          }),
+        ),
+    );
+
+    const result = await this.orderRepository.insert({
+      id: orderId,
+      referenceId: order.id,
+      order_date: order.delivery.datetime,
+      receipt: order.courier.waybill_id,
+      status: order.status,
+      addressId: address.id,
+      order_total: data.orderTotal
+    });
+
+    for (const detail of data.orderItems) {
+      await this.orderItemRepository.insert({
+        orderId: result.identifiers[0].id,
+        productDetailId: detail.productDetail.id,
+      });
+    }
+
+    return await firstValueFrom(
+      this.httpService
+        .post(
+          `https://api.sandbox.midtrans.com/v1/payment-links`,
+          {
+            transaction_details: {
+              order_id: orderId,
+              gross_amount: data.orderTotal,
+              payment_link_id: orderId
+            },
+            customer_required: true,
+            usage_limit: 1,
+            item_details: [
+              ...data.orderItems.map((item: CartItem) => ({
+                id: item.productDetail.product.id,
+                price: item.productDetail.product.price,
+                quantity: 1,
+                name: item.productDetail.product.name,
+                brand: item.productDetail.product.brand.name,
+                merchant_name: 'Walkway',
+              })),
+            ],
+            customer_details: {
+              first_name: data.customer.name,
+              email: data.customer.email,
+              phone: data.customer.phone_number,
+            },
+            expiry: {
+              duration: 3,
+              unit: 'hours',
+            },
+            // custom_field1: 'order',
+          },
+          { headers: this.midtransHeader },
+        )
+        .pipe(
+          map((res) => res.data),
+          catchError((error) => {
+            throw error;
+          }),
+        ),
+    );
   }
 
   async genPaymentToken(data: any) {

@@ -12,7 +12,7 @@ import { CartItem } from '../user/entities/cart-item.entity';
 import { Cart } from '../user/entities/cart.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Order, OrderItem, CartItem, Cart]), HttpModule, UserModule, ProductModule, JwtModule],
+  imports: [TypeOrmModule.forFeature([Order, OrderItem, CartItem, Cart]), HttpModule, UserModule, JwtModule],
   controllers: [OrderController],
   providers: [OrderService],
   exports: [OrderService]

@@ -13,6 +13,10 @@ import { ProductPhoto } from './entities/product-photo.entity';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { LoggerModule } from 'nestjs-pino';
+import { OrderModule } from '../order/order.module';
+import { MailerModule } from '@nestjs-modules/mailer';
+import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -25,23 +29,47 @@ import { LoggerModule } from 'nestjs-pino';
         signOptions: { expiresIn: '24h' }
       })
     }),
-    BrandModule,
-    CategoryModule,
-    UserModule,
-    JwtModule,
-    LoggerModule.forRoot({
-      pinoHttp: {
+    MailerModule.forRootAsync({
+      useFactory: async (configService: ConfigService) => ({
         transport: {
-          target: 'pino-pretty',
-          options: {
-            levelFirst: true,
-            translateTime: "UTC:yyyy-mm-dd'T'HH:MM:ss'Z'",
-            colorize: true,
+          host: configService.get<string>('MAIL_HOST'),
+          port: configService.get<number>('MAIL_PORT'),
+          secure: false,
+          auth: {
+            user: configService.get<string>('MAIL_USER'),
+            pass: configService.get<string>('MAIL_PASSWORD'),
           },
         },
-        level: process.env.NODE_ENV !== 'production' ? 'debug' : 'info',
-      },
+        defaults: {
+          from: `"Walkway" <noreply@walkway.com>`,
+        },
+        template: {
+          dir: join(__dirname, 'templates'),
+          adapter: new HandlebarsAdapter(),
+          options: {
+            strict: true,
+          },
+        },
+      }),
+      inject: [ConfigService],
     }),
+    BrandModule,
+    OrderModule,
+    CategoryModule,
+    UserModule,
+    // LoggerModule.forRoot({
+    //   pinoHttp: {
+    //     transport: {
+    //       target: 'pino-pretty',
+    //       options: {
+    //         levelFirst: true,
+    //         translateTime: "UTC:yyyy-mm-dd'T'HH:MM:ss'Z'",
+    //         colorize: true,
+    //       },
+    //     },
+    //     level: process.env.NODE_ENV !== 'production' ? 'debug' : 'info',
+    //   },
+    // }),
   ],
   controllers: [ProductController],
   providers: [ProductService],

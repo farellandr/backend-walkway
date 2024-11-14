@@ -12,6 +12,7 @@ import {
 import { OrderItem } from './order-item.entity';
 import { User } from '#/modules/user/entities/user.entity';
 import { Address } from '#/modules/user/entities/address.entity';
+import { OrderType } from '#/utils/enums/order-types.enum';
 
 @Entity()
 export class Order {
@@ -39,6 +40,13 @@ export class Order {
     default: OrderStatus.ON_HOLD,
   })
   status: OrderStatus;
+
+  @Column({
+    type: 'enum',
+    enum: OrderType,
+    default: OrderType.ORDER,
+  })
+  order_type: OrderType;
 
   @ManyToOne(() => Address, (address) => address.orders)
   address: Address;

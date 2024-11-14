@@ -30,6 +30,9 @@ export class BrandService {
     return await this.brandRepository.find({
       skip: (page - 1) * limit,
       take: limit,
+      order: {
+        updatedAt: 'DESC'
+      }
     });
   }
 
