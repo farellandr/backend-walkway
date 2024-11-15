@@ -1,4 +1,9 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Order } from './entities/order.entity';
@@ -21,6 +26,12 @@ import { OrderStatus } from '#/utils/enums/order-status.enum';
 import { JwtService } from '@nestjs/jwt';
 import { Cart } from '../user/entities/cart.entity';
 
+import * as puppeteer from 'puppeteer';
+import * as handlebars from 'handlebars';
+import { readFileSync } from 'fs';
+import { join } from 'path';
+import { Response } from 'express';
+
 @Injectable()
 export class OrderService {
   constructor(
@@ -36,7 +47,41 @@ export class OrderService {
     private readonly configService: ConfigService,
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
-  ) {}
+  ) {
+    handlebars.registerHelper('multiply', function (a, b) {
+      return (a * b).toFixed(2);
+    });
+    handlebars.registerHelper('formatDate', function (date) {
+      return new Date(date).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    });
+    handlebars.registerHelper('formatPrice', function (price) {
+      return price.toLocaleString('en-US');
+    });
+    handlebars.registerHelper('toLowerCase', function (status) {
+      return status.toLowerCase();
+    });
+    handlebars.registerHelper('formatPhoneNumber', function (phoneNumber) {
+      let formattedNumber = phoneNumber.replace(/^\+62/, '+62 ');
+
+      if (formattedNumber.length > 6) {
+        formattedNumber = `${formattedNumber.slice(
+          0,
+          7,
+        )}-${formattedNumber.slice(7, 11)}-${formattedNumber.slice(11, 16)}`;
+      }
+
+      return formattedNumber.trim();
+    });
+    handlebars.registerHelper('formatSubTotal', function (price) {
+      return (price - 10000).toLocaleString('en-US');
+    });
+  }
 
   private baseUrl = this.configService.get<string>('biteship.url');
   private apiKey = this.configService.get<string>('biteship.secret');
@@ -55,26 +100,91 @@ export class OrderService {
     'Content-Type': 'application/json',
   };
 
-  // {
-  //   transaction_type: 'on-us',
-  //   transaction_time: '2024-11-07 11:58:37',
-  //   transaction_status: 'settlement',
-  //   transaction_id: '30e77f39-ffda-449f-a307-366061777d71',
-  //   status_message: 'midtrans payment notification',
-  //   status_code: '200',
-  //   signature_key: 'e9ec7f1054e75231162da332d77a64692307a0973aed07d73e1fc18c8e4f52d68e3fd1f7e8a1ae76e6fff2f2f51879aac250b5d39322d105b5f99fb8c25d1763',
-  //   settlement_time: '2024-11-07 11:58:48',
-  //   payment_type: 'qris',
-  //   order_id: '8f9fed02-f3c3-4e5d-90a9-8b01cc2aba31',
-  //   merchant_id: 'G451523749',
-  //   issuer: 'gopay',
-  //   gross_amount: '1930000.00',
-  //   fraud_status: 'accept',
-  //   expiry_time: '2024-11-07 12:13:37',
-  //   custom_field1: 'order',
-  //   currency: 'IDR',
-  //   acquirer: 'gopay'
-  // }
+  async generateOrderDetailPDF(orderId: string, res?: Response) {
+    const order = await this.orderRepository.findOne({
+      where: { id: orderId },
+      relations: {
+        orderItems: {
+          productDetail: {
+            product: {
+              brand: true,
+              productPhotos: true,
+            },
+          },
+        },
+        address: true,
+      },
+    });
+
+    if (!order) {
+      throw new NotFoundException(`Order with ID ${orderId} not found`);
+    }
+
+    const templatePath = join(__dirname, '/templates/order-detail.hbs');
+    const templateContent = readFileSync(templatePath, 'utf-8');
+    const template = handlebars.compile(templateContent);
+
+    const html = template({
+      order,
+      generatedDate: new Date().toLocaleDateString(),
+    });
+
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--allow-file-access-from-files',
+      ],
+      timeout: 120000,
+    });
+
+    try {
+      const page = await browser.newPage();
+
+      const fileName = `order-invoice-${new Date()
+        .toISOString()
+        .slice(0, 10)}.pdf`;
+
+      await page.setContent(html, {
+        waitUntil: 'networkidle0',
+        timeout: 120000,
+      });
+
+      await page.evaluate((fileName) => {
+        document.title = fileName;
+      }, fileName.replace('.pdf', ''));
+
+      const pdf = await page.pdf({
+        format: 'A4',
+        margin: {
+          top: '20px',
+          right: '20px',
+          bottom: '20px',
+          left: '20px',
+        },
+        printBackground: true,
+        preferCSSPageSize: true,
+        timeout: 120000,
+      });
+      await browser.close();
+
+      res.set({
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `inline; filename=${fileName}`,
+        'Content-Length': pdf.length,
+      });
+
+      res.end(pdf);
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      throw new Error(`Failed to generate PDF: ${error.message}`);
+    } finally {
+      await browser.close();
+    }
+  }
 
   async getRate(data: any) {
     return await firstValueFrom(
@@ -430,8 +540,8 @@ export class OrderService {
         },
       },
       order: {
-        createdAt: 'desc'
-      }
+        createdAt: 'desc',
+      },
     });
     // const response = await firstValueFrom(
     //   this.httpService

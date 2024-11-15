@@ -28,6 +28,9 @@ export class RoleService {
       take: limit,
       where: {
         name: Not(In(['user', 'superadmin']))
+      },
+      order: {
+        name: 'asc'
       }
     })
   }

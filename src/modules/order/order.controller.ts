@@ -1,10 +1,22 @@
-import { Controller, Get, Post, Body, Param, HttpStatus, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  HttpStatus,
+  Request,
+  Res,
+  NotFoundException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
+import { Response } from 'express';
 
 @Controller('order')
 export class OrderController {
-  constructor(private readonly orderService: OrderService) { }
+  constructor(private readonly orderService: OrderService) {}
 
   // @Post()
   // async create(@Body() createOrderDto: CreateOrderDto) {
@@ -15,19 +27,36 @@ export class OrderController {
   //   }
   // }
 
+  @Get('export/:orderId')
+  async exportOrderDetail(
+    @Param('orderId') orderId: string,
+    @Res() res: Response,
+  ) {
+    try {
+      const pdfBuffer = await this.orderService.generateOrderDetailPDF(orderId, res);
+
+      return pdfBuffer;
+    } catch (error) {
+      console.error('Export error:', error);
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(error);
+    }
+  }
+
   @Post('/payment')
   async midtransNotification(@Request() req: any) {
     return await this.orderService.paymentHandler(req.body);
   }
-
 
   @Post('/rates')
   async getCourierRate(@Body() data: any) {
     return {
       data: await this.orderService.getRate(data),
       statusCode: HttpStatus.CREATED,
-      message: 'success'
-    }
+      message: 'success',
+    };
   }
 
   @Post('/generate-link')
@@ -35,8 +64,8 @@ export class OrderController {
     return {
       data: await this.orderService.genPaymentLink(data),
       statusCode: HttpStatus.CREATED,
-      message: 'success'
-    }
+      message: 'success',
+    };
   }
 
   @Post('/generate-token')
@@ -44,8 +73,8 @@ export class OrderController {
     return {
       data: await this.orderService.genPaymentToken(data),
       statusCode: HttpStatus.CREATED,
-      message: 'success'
-    }
+      message: 'success',
+    };
   }
 
   @Post('/generate-token-bid')
@@ -53,8 +82,8 @@ export class OrderController {
     return {
       data: await this.orderService.genBidPaymentToken(data),
       statusCode: HttpStatus.CREATED,
-      message: 'success'
-    }
+      message: 'success',
+    };
   }
 
   @Get()

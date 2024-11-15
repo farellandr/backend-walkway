@@ -324,6 +324,9 @@ export class ProductService {
           },
         },
       },
+      order: {
+        updatedAt: 'desc'
+      }
     });
   }
 
