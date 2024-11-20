@@ -8,6 +8,7 @@ import { User } from '#/modules/user/entities/user.entity';
 import { RoleService } from '#/modules/role/role.service';
 import { USER_ROLE } from '#/utils/constants/role.name';
 import { jwtDecode } from 'jwt-decode';
+import { Status } from '#/utils/enums/status.enum';
 
 @Injectable()
 export class AuthService {
@@ -42,6 +43,17 @@ export class AuthService {
           statusCode: HttpStatus.UNAUTHORIZED,
           error: 'Unauthorized',
           message: 'Wrong password.',
+        },
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    if (user.status == Status.INACTIVE) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.UNAUTHORIZED,
+          error: 'Unauthorized',
+          message: 'You no longer have access.',
         },
         HttpStatus.UNAUTHORIZED,
       );
