@@ -7,7 +7,7 @@ import {
 import { CreateOrderDto } from './dto/create-order.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Order } from './entities/order.entity';
-import { Repository } from 'typeorm';
+import { Between, Repository } from 'typeorm';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { catchError, firstValueFrom, map } from 'rxjs';
@@ -27,9 +27,11 @@ import { JwtService } from '@nestjs/jwt';
 import { Cart } from '../user/entities/cart.entity';
 
 import * as puppeteer from 'puppeteer';
+import * as ExcelJS from 'exceljs';
+import * as dayjs from 'dayjs';
 import * as handlebars from 'handlebars';
 import { readFileSync } from 'fs';
-import { join } from 'path';
+import path, { join } from 'path';
 import { Response } from 'express';
 
 @Injectable()
@@ -80,6 +82,14 @@ export class OrderService {
     });
     handlebars.registerHelper('formatSubTotal', function (price) {
       return (price - 10000).toLocaleString('en-US');
+    });
+    // handlebars.registerHelper('formatDate', function(date) {
+    //   return dayjs(date).format('YYYY-MM-DD HH:mm');
+    // });
+    
+    // Optional: Add a helper to format currency
+    handlebars.registerHelper('formatCurrency', function(value) {
+      return value.toFixed(2);
     });
   }
 
@@ -184,6 +194,117 @@ export class OrderService {
     } finally {
       await browser.close();
     }
+  }
+
+  async generateExcel(res: Response, startDate: string, endDate: string) {
+    const orders = await this.orderRepository.find({
+      where: {
+        order_date: Between(new Date(startDate), new Date(endDate)),
+      },
+      relations: ['orderItems', 'orderItems.productDetail', 'orderItems.productDetail.product', 'address'],
+      order: { order_date: 'DESC' }, // Sort by most recent orders first
+    });
+  
+    if (!orders.length) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.NOT_FOUND,
+          error: 'Not Found',
+          message: 'No orders found for the given period.',
+        },
+        HttpStatus.NOT_FOUND,
+      );
+    }
+  
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Order Report');
+  
+    worksheet.columns = [
+      { header: 'No', key: 'no', width: 5 },
+      { header: 'Order ID', key: 'orderId', width: 20 },
+      { header: 'Order Date', key: 'orderDate', width: 15 },
+      { header: 'Status', key: 'status', width: 15 },
+      { header: 'Customer', key: 'customer', width: 20 },
+      { header: 'Total Amount', key: 'total', width: 15 },
+      { header: 'Items Count', key: 'itemsCount', width: 10 },
+      { header: 'Shipping Address', key: 'address', width: 30 }
+    ];
+
+    worksheet.getRow(1).font = { bold: true, size: 12 };
+    worksheet.getRow(1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'F0F0F0' }
+    };
+
+    worksheet.spliceRows(1, 0, ['Order Report for ' + dayjs(startDate).format('MMMM YYYY')]);
+    worksheet.mergeCells('A1:H1');
+    worksheet.getCell('A1').font = { bold: true, size: 14, color: { argb: '000000' } };
+    worksheet.getCell('A1').alignment = { horizontal: 'center', vertical: 'middle' };
+
+    orders.forEach((order, index) => {
+      // const totalItems = order.orderItems.reduce((sum, item) => sum + item.quantity, 0);
+      const totalItems = 1;
+      
+      worksheet.addRow({
+        no: index + 1,
+        orderId: order.id,
+        orderDate: dayjs(order.order_date).format('YYYY-MM-DD'),
+        status: order.status,
+        customer: order.address?.contact_name || 'N/A',
+        total: order.order_total,
+        itemsCount: totalItems,
+        address: order.address 
+          ? `${order.address.province}, ${order.address.city}, ${order.address.district} ${order.address.zipcode}` 
+          : 'N/A'
+      });
+    });
+
+    // Add total summary at the bottom
+    const totalOrders = orders.length;
+    const totalRevenue = orders.reduce((sum, order) => sum + order.order_total, 0);
+    
+    // worksheet.addRow(); // Empty row
+    worksheet.addRow([
+      'Total Orders', 
+      totalOrders, 
+      'Total Revenue', 
+      `$${totalRevenue.toFixed(2)}`
+    ]);
+    
+    // Style summary rows
+    const summaryRow = worksheet.lastRow;
+    if (summaryRow) {
+      summaryRow.font = { bold: true };
+    }
+
+    // Apply borders to data rows
+    worksheet.eachRow((row, rowNumber) => {
+      if (rowNumber > 1) {
+        row.eachCell(cell => {
+          cell.border = {
+            top: { style: 'thin' },
+            left: { style: 'thin' },
+            bottom: { style: 'thin' },
+            right: { style: 'thin' }
+          };
+        });
+      }
+    });
+
+    // Set response headers
+    res.setHeader(
+      'Content-Type', 
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    );
+    res.setHeader(
+      'Content-Disposition', 
+      `attachment; filename=Order_Report_${dayjs(startDate).format('YYYY_MM')}.xlsx`
+    );
+  
+    // Write to response
+    await workbook.xlsx.write(res);
+    res.end();
   }
 
   async getRate(data: any) {
