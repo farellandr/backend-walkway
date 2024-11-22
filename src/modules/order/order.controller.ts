@@ -10,6 +10,8 @@ import {
   NotFoundException,
   InternalServerErrorException,
   Query,
+  HttpException,
+  HttpCode,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
@@ -20,14 +22,26 @@ import * as dayjs from 'dayjs';
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
-  // @Post()
-  // async create(@Body() createOrderDto: CreateOrderDto) {
-  //   return {
-  //     data: await this.orderService.create(createOrderDto),
-  //     statusCode: HttpStatus.CREATED,
-  //     message: 'success'
-  //   }
-  // }
+  @Get("/track/:id")
+  async track(@Param('id') id: string) {
+    return {
+      data: await this.orderService.track(id),
+      statusCode: HttpStatus.OK,
+      message: 'success',
+    };
+  }
+
+  @Post('hook')
+  @HttpCode(200)
+  async create(@Body() body: any) {
+    await this.orderService.hook(body);
+
+    return {
+      success: true,
+      message: 'Webhook received successfully',
+      timestamp: new Date().toISOString()
+    };
+  }
 
   @Get('export/excel')
   async exportOrderExcel(

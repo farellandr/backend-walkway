@@ -86,9 +86,9 @@ export class OrderService {
     // handlebars.registerHelper('formatDate', function(date) {
     //   return dayjs(date).format('YYYY-MM-DD HH:mm');
     // });
-    
+
     // Optional: Add a helper to format currency
-    handlebars.registerHelper('formatCurrency', function(value) {
+    handlebars.registerHelper('formatCurrency', function (value) {
       return value.toFixed(2);
     });
   }
@@ -109,6 +109,45 @@ export class OrderService {
     Authorization: `Basic U0ItTWlkLXNlcnZlci1sZUJYOVJyWldyV2ptZFFZY1NfZG5NY246`,
     'Content-Type': 'application/json',
   };
+
+  async track(id: string) {
+    const order = await firstValueFrom(
+      this.httpService
+        .get(`${this.baseUrl}/v1/orders/${id}`, {
+          headers: this.biteshipHeader,
+        })
+        .pipe(
+          map((res) => res.data),
+          catchError((error) => {
+            throw error;
+          }),
+        ),
+    );
+
+    const response = await firstValueFrom(
+      this.httpService
+        .get(`${this.baseUrl}/v1/trackings/${order.courier.tracking_id}`, {
+          headers: this.biteshipHeader,
+        })
+        .pipe(
+          map((res) => res.data),
+          catchError((error) => {
+            throw error;
+          }),
+        ),
+    );
+    return response;
+  }
+
+  async hook(body: any) {
+    return await this.orderRepository.update(
+      { referenceId: body.order_id },
+      {
+        status:
+          body.status == 'allocated' ? OrderStatus.ALLOCATED : body.status,
+      },
+    );
+  }
 
   async generateOrderDetailPDF(orderId: string, res?: Response) {
     const order = await this.orderRepository.findOne({
@@ -201,10 +240,15 @@ export class OrderService {
       where: {
         order_date: Between(new Date(startDate), new Date(endDate)),
       },
-      relations: ['orderItems', 'orderItems.productDetail', 'orderItems.productDetail.product', 'address'],
+      relations: [
+        'orderItems',
+        'orderItems.productDetail',
+        'orderItems.productDetail.product',
+        'address',
+      ],
       order: { order_date: 'DESC' }, // Sort by most recent orders first
     });
-  
+
     if (!orders.length) {
       throw new HttpException(
         {
@@ -215,10 +259,10 @@ export class OrderService {
         HttpStatus.NOT_FOUND,
       );
     }
-  
+
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Order Report');
-  
+
     worksheet.columns = [
       { header: 'No', key: 'no', width: 5 },
       { header: 'Order ID', key: 'orderId', width: 20 },
@@ -227,25 +271,33 @@ export class OrderService {
       { header: 'Customer', key: 'customer', width: 20 },
       { header: 'Total Amount', key: 'total', width: 15 },
       { header: 'Items Count', key: 'itemsCount', width: 10 },
-      { header: 'Shipping Address', key: 'address', width: 30 }
+      { header: 'Shipping Address', key: 'address', width: 30 },
     ];
 
     worksheet.getRow(1).font = { bold: true, size: 12 };
     worksheet.getRow(1).fill = {
       type: 'pattern',
       pattern: 'solid',
-      fgColor: { argb: 'F0F0F0' }
+      fgColor: { argb: 'F0F0F0' },
     };
 
-    worksheet.spliceRows(1, 0, ['Order Report for ' + dayjs(startDate).format('MMMM YYYY')]);
+    worksheet.spliceRows(1, 0, [
+      'Order Report for ' + dayjs(startDate).format('MMMM YYYY'),
+    ]);
     worksheet.mergeCells('A1:H1');
-    worksheet.getCell('A1').font = { bold: true, size: 14, color: { argb: '000000' } };
-    worksheet.getCell('A1').alignment = { horizontal: 'center', vertical: 'middle' };
+    worksheet.getCell('A1').font = {
+      bold: true,
+      size: 14,
+      color: { argb: '000000' },
+    };
+    worksheet.getCell('A1').alignment = {
+      horizontal: 'center',
+      vertical: 'middle',
+    };
 
     orders.forEach((order, index) => {
-      // const totalItems = order.orderItems.reduce((sum, item) => sum + item.quantity, 0);
       const totalItems = 1;
-      
+
       worksheet.addRow({
         no: index + 1,
         orderId: order.id,
@@ -254,24 +306,27 @@ export class OrderService {
         customer: order.address?.contact_name || 'N/A',
         total: order.order_total,
         itemsCount: totalItems,
-        address: order.address 
-          ? `${order.address.province}, ${order.address.city}, ${order.address.district} ${order.address.zipcode}` 
-          : 'N/A'
+        address: order.address
+          ? `${order.address.province}, ${order.address.city}, ${order.address.district} ${order.address.zipcode}`
+          : 'N/A',
       });
     });
 
     // Add total summary at the bottom
     const totalOrders = orders.length;
-    const totalRevenue = orders.reduce((sum, order) => sum + order.order_total, 0);
-    
+    const totalRevenue = orders.reduce(
+      (sum, order) => sum + order.order_total,
+      0,
+    );
+
     // worksheet.addRow(); // Empty row
     worksheet.addRow([
-      'Total Orders', 
-      totalOrders, 
-      'Total Revenue', 
-      `$${totalRevenue.toFixed(2)}`
+      'Total Orders',
+      totalOrders,
+      'Total Revenue',
+      `$${totalRevenue.toFixed(2)}`,
     ]);
-    
+
     // Style summary rows
     const summaryRow = worksheet.lastRow;
     if (summaryRow) {
@@ -281,12 +336,12 @@ export class OrderService {
     // Apply borders to data rows
     worksheet.eachRow((row, rowNumber) => {
       if (rowNumber > 1) {
-        row.eachCell(cell => {
+        row.eachCell((cell) => {
           cell.border = {
             top: { style: 'thin' },
             left: { style: 'thin' },
             bottom: { style: 'thin' },
-            right: { style: 'thin' }
+            right: { style: 'thin' },
           };
         });
       }
@@ -294,14 +349,16 @@ export class OrderService {
 
     // Set response headers
     res.setHeader(
-      'Content-Type', 
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     );
     res.setHeader(
-      'Content-Disposition', 
-      `attachment; filename=Order_Report_${dayjs(startDate).format('YYYY_MM')}.xlsx`
+      'Content-Disposition',
+      `attachment; filename=Order_Report_${dayjs(startDate).format(
+        'YYYY_MM',
+      )}.xlsx`,
     );
-  
+
     // Write to response
     await workbook.xlsx.write(res);
     res.end();

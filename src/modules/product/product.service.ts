@@ -117,7 +117,7 @@ export class ProductService {
                 productName: `${auction.productDetail.product.brand.name} ${auction.productDetail.product.name}`,
                 brandName: auction.productDetail.product.brand.name,
                 amount: highestBidder.amount.toLocaleString('en-US'),
-                walkwayLogo: `http://localhost:3222/brand/uploads/walkway.png`,
+                walkwayLogo: `http://f209kkb4-3222.asse.devtunnels.ms/brand/uploads/walkway.png`,
                 link: payment.payment_url,
               },
             });
