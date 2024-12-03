@@ -1,0 +1,239 @@
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  HttpStatus,
+  Query,
+  DefaultValuePipe,
+  ParseIntPipe,
+  ParseUUIDPipe,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
+  Res,
+  HttpException,
+} from '@nestjs/common';
+import { ProductService } from './product.service';
+import { CreateProductDto } from './dto/create-product.dto';
+import { UpdateProductDto } from './dto/update-product.dto';
+import { CreateCartItemDto } from './dto/create-cart-item.dto';
+import { CreateBidProductDto } from './dto/create-bid-product.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { uploadImageHelper } from '#/utils/helpers/upload-helper';
+import { capitalizeWords } from '#/utils/helpers/capitalizer';
+import { of } from 'rxjs';
+import { join } from 'path';
+import { PhotoType } from '#/utils/enums/photo-types.enum';
+import { jwtDecode } from 'jwt-decode';
+
+@Controller('product')
+export class ProductController {
+  constructor(private readonly productService: ProductService) {}
+
+  @Post()
+  async create(@Body() createProductDto: CreateProductDto) {
+    return {
+      data: await this.productService.create(createProductDto),
+      statusCode: HttpStatus.CREATED,
+      message: 'success',
+    };
+  }
+
+  @Post('/checkout-token')
+  async CheckoutToken(@Body() product: any) {
+    return {
+      data: await this.productService.checkoutToken(product),
+      statusCode: HttpStatus.CREATED,
+      message: 'success',
+    };
+  }
+
+  @Post('/add-to-cart')
+  async addToCart(@Body() createCartItemDto: CreateCartItemDto) {
+    return {
+      data: await this.productService.addToCart(createCartItemDto),
+      statusCode: HttpStatus.CREATED,
+      message: 'success',
+    };
+  }
+
+  @Post('/add-to-bid')
+  async addToBid(@Body() createBidProductDto: CreateBidProductDto) {
+    return {
+      data: await this.productService.addToBid(createBidProductDto),
+      statusCode: HttpStatus.CREATED,
+      message: 'success',
+    };
+  }
+
+  @Post('/participate-bid')
+  async participateBid(@Body() body: any) {
+    return {
+      data: await this.productService.participateBid(body),
+      statusCode: HttpStatus.CREATED,
+      message: 'success',
+    };
+  }
+
+  @Post('/upload')
+  @UseInterceptors(
+    FileInterceptor('image', uploadImageHelper('product-images')),
+  )
+  async uploadImage(@UploadedFile() image: Express.Multer.File) {
+    if (!image) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.BAD_REQUEST,
+          error: 'Bad Request.',
+          message: 'An error occurred while uploading image.',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    return {
+      imageUrl: image?.filename,
+    };
+  }
+
+  @Get()
+  async findAll() {
+    const products = await this.productService.findAll();
+    const formattedProducts = products.map((product) => ({
+      ...product,
+      name: `${product.brand.name} ${product.name}`,
+      frontImage: product.productPhotos.find(
+        (photo) => photo.photoType === PhotoType.FRONT,
+      )?.image,
+    }));
+
+    return {
+      data: formattedProducts,
+      statusCode: HttpStatus.OK,
+      message: 'success',
+    };
+  }
+
+  @Get('/bids')
+  async findBids() {
+    const bids = await this.productService.findProductBids();
+
+    const formattedBids = bids.map((bid) => {
+      const product = bid.productDetail.product;
+      const frontPhoto = product.productPhotos.find(
+        (photo) => photo.photoType === PhotoType.FRONT,
+      )?.image;
+
+      return {
+        ...bid,
+        productPhotos: frontPhoto ? `${frontPhoto}` : null,
+        productName: `${product.brand.name} ${product.name}`,
+      };
+    });
+
+    return {
+      data: formattedBids,
+      statusCode: HttpStatus.OK,
+      message: 'success',
+    };
+  }
+
+  @Get('/bid/:id')
+  async findBid(@Param('id') id: string) {
+    const bid = await this.productService.getBid(id);
+
+    const product = bid.productDetail.product;
+    const frontPhoto = product.productPhotos.find(
+      (photo) => photo.photoType === PhotoType.FRONT,
+    )?.image;
+
+    return {
+      data: {
+        ...bid,
+        productPhotos: frontPhoto ? `${frontPhoto}` : null,
+        productName: `${product.brand.name} ${product.name}`,
+      },
+      statusCode: HttpStatus.OK,
+      message: 'success',
+    };
+  }
+
+  @Get('/checkout/:token')
+  async getUserByToken(@Param('token') token: string) {
+    const payload = jwtDecode(token);
+    return {
+      data: await this.productService.getCheckoutData(payload),
+      statusCode: HttpStatus.OK,
+      message: 'success',
+    };
+  }
+
+  @Get('/newest')
+  async findNewest() {
+    const products = await this.productService.findNewest();
+
+    const formattedProducts = products.map((product) => ({
+      ...product,
+      name: `${product.brand.name} ${product.name}`,
+      productPhotos: product.productPhotos.find(
+        (photo) => photo.photoType === PhotoType.FRONT,
+      )?.image,
+    }));
+
+    return {
+      data: formattedProducts,
+      statusCode: HttpStatus.OK,
+      message: 'success',
+    };
+  }
+
+  @Get('/uploads/:image')
+  getImage(@Param('image') imagePath: string, @Res() res: any) {
+    return of(
+      res.sendFile(
+        join(process.cwd(), `/uploads/images/product-images/${imagePath}`),
+      ),
+    );
+  }
+
+  @Get('/:name')
+  async findName(@Param('name') name: string) {
+    const formattedName = capitalizeWords(name.replace(/-/g, ' '));
+
+    const product = await this.productService.findName(formattedName);
+    return {
+      data: {
+        ...product,
+        name: `${product.brand.name} ${product.name}`,
+      },
+      statusCode: HttpStatus.OK,
+      message: 'success',
+    };
+  }
+
+  @Patch(':id')
+  async update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateProductDto: UpdateProductDto,
+  ) {
+    return {
+      data: await this.productService.update(id, updateProductDto),
+      statusCode: HttpStatus.OK,
+      message: 'success',
+    };
+  }
+
+  @Delete(':id')
+  async remove(@Param('id', ParseUUIDPipe) id: string) {
+    await this.productService.remove(id);
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'success',
+    };
+  }
+}

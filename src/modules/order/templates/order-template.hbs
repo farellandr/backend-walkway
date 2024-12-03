@@ -1,0 +1,43 @@
+<table style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif;">
+  <thead>
+    <tr>
+      <th style="border: 1px solid #000; padding: 8px; background-color: #f4f4f4;">No</th>
+      <th style="border: 1px solid #000; padding: 8px; background-color: #f4f4f4;">Order Details</th>
+      <th style="border: 1px solid #000; padding: 8px; background-color: #f4f4f4;">Customer Info</th>
+      <th style="border: 1px solid #000; padding: 8px; background-color: #f4f4f4;">Order Summary</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each this}}
+      <tr>
+        <td style="border: 1px solid #ddd; padding: 8px;">{{@index}}</td>
+        <td style="border: 1px solid #ddd; padding: 8px;">
+          <strong>Order ID:</strong> {{id}}<br>
+          <strong>Date:</strong> {{formatDate order_date}}<br>
+          <strong>Status:</strong> {{status}}
+        </td>
+        <td style="border: 1px solid #ddd; padding: 8px;">
+          <strong>Name:</strong> {{address.contact_name}}<br>
+          <strong>Phone:</strong> {{address.phone}}<br>
+          <strong>Address:</strong> 
+          {{address.street}}, 
+          {{address.city}}, 
+          {{address.state}} {{address.zip}}
+        </td>
+        <td style="border: 1px solid #ddd; padding: 8px;">
+          <strong>Total Amount:</strong> ${{order_total}}<br>
+          <strong>Items:</strong>
+          <ul>
+            {{#each orderItems}}
+              <li>
+                {{productDetail.product.name}} 
+                (Qty: {{quantity}}, 
+                Price: ${{productDetail.price}})
+              </li>
+            {{/each}}
+          </ul>
+        </td>
+      </tr>
+    {{/each}}
+  </tbody>
+</table>

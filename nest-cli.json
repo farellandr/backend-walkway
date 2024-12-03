@@ -1,4 +1,8 @@
 {
   "collection": "@nestjs/schematics",
-  "sourceRoot": "src"
+  "sourceRoot": "src",
+  "compilerOptions": {
+    "assets": ["modules/product/templates/**/*", "modules/order/templates/**/*"],
+    "watchAssets": true
+  }
 }

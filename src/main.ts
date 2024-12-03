@@ -3,9 +3,10 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Logger } from 'nestjs-pino';
-import { CorrelationIdMiddleware } from './utils/correlation-id.middleware';
+import { CorrelationIdMiddleware } from './utils/middlewares/correlation-id.middleware';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { ExceptionsFilter } from './utils/helpers/exception-filter';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -16,6 +17,7 @@ async function bootstrap() {
   app.use(CorrelationIdMiddleware());
   app.useLogger(logger);
   app.enableCors();
+  app.useGlobalFilters(new ExceptionsFilter());
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -35,10 +37,10 @@ async function bootstrap() {
   const configService = app.get<ConfigService>(ConfigService);
   const port = configService.get<number>('port');
 
-  const hostname = '0.0.0.0';
+  const hostname = configService.get<string>('host');
 
   await app.listen(port, hostname, () => {
-    // logger.log(`Server listening on ${hostname}:${port}`);
+    logger.log(`Server listening on ${hostname}:${port}`);
     // if (error) {
     //   logger.error(error);
     //   process.exit(1);

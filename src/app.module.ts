@@ -2,16 +2,26 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as Joi from 'joi';
-import { UsersModule } from './users/users.module';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { LoggerModule } from 'nestjs-pino';
 import { HealthModule } from './health/health.module';
 import configuration from './config/configuration';
 import * as pino from 'pino';
 import { SeederModule } from '#/seeder/seeder.module';
+import { BrandModule } from './modules/brand/brand.module';
+import { CategoryModule } from './modules/category/category.module';
+import { RoleModule } from './modules/role/role.module';
+import { PaymentModule } from './modules/payment/payment.module';
+import { ProductModule } from './modules/product/product.module';
+import { UserModule } from './modules/user/user.module';
+import { AuthModule } from './auth/auth.module';
+import { AreaModule } from './area/area.module';
+import { OrderModule } from './modules/order/order.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     LoggerModule.forRoot({
       pinoHttp: {
         base: undefined,
@@ -94,8 +104,16 @@ import { SeederModule } from '#/seeder/seeder.module';
       inject: [ConfigService],
     }),
     SeederModule,
-    UsersModule,
     HealthModule,
+    BrandModule,
+    CategoryModule,
+    RoleModule,
+    PaymentModule,
+    ProductModule,
+    UserModule,
+    AuthModule,
+    AreaModule,
+    OrderModule,
   ],
 })
 export class AppModule {}
