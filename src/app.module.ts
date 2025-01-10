@@ -8,6 +8,7 @@ import { HealthModule } from './health/health.module';
 import configuration from './config/configuration';
 import * as pino from 'pino';
 import { ScheduleModule } from '@nestjs/schedule';
+import { RoleModule } from './modules/role/role.module';
 
 @Module({
   imports: [
@@ -94,6 +95,7 @@ import { ScheduleModule } from '@nestjs/schedule';
       inject: [ConfigService],
     }),
     HealthModule,
+    RoleModule,
   ],
 })
 export class AppModule {}
