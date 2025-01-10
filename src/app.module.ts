@@ -9,6 +9,8 @@ import configuration from './config/configuration';
 import * as pino from 'pino';
 import { ScheduleModule } from '@nestjs/schedule';
 import { RoleModule } from './modules/role/role.module';
+import { UserModule } from './modules/user/user.module';
+import { SeedersModule } from './seeders/seeders.module';
 
 @Module({
   imports: [
@@ -96,6 +98,8 @@ import { RoleModule } from './modules/role/role.module';
     }),
     HealthModule,
     RoleModule,
+    UserModule,
+    SeedersModule,
   ],
 })
 export class AppModule {}

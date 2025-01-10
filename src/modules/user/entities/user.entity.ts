@@ -1,24 +1,33 @@
-import { User } from '#/modules/user/entities/user.entity';
+import { Role } from '#/modules/role/entities/role.entity';
 import {
   Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
-  OneToMany,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
 @Entity()
-export class Role {
+export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'varchar', unique: true })
+  @Column({ type: 'varchar', length: 60 })
   name: string;
 
-  @OneToMany(() => User, (user) => user.role)
-  users: User[];
+  @Column({ type: 'varchar', length: 60, unique: true })
+  email: string;
+
+  @Column({ type: 'text' })
+  password: string;
+
+  @Column({ type: 'boolean', default: true })
+  status: boolean;
+
+  @ManyToOne(() => Role, (role) => role.users)
+  role: Role;
 
   @CreateDateColumn({
     type: 'timestamp with time zone',
