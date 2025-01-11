@@ -11,6 +11,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { RoleModule } from './modules/role/role.module';
 import { UserModule } from './modules/user/user.module';
 import { SeedersModule } from './seeders/seeders.module';
+import { ImageModule } from './modules/image/image.module';
 
 @Module({
   imports: [
@@ -100,6 +101,7 @@ import { SeedersModule } from './seeders/seeders.module';
     RoleModule,
     UserModule,
     SeedersModule,
+    ImageModule,
   ],
 })
 export class AppModule {}

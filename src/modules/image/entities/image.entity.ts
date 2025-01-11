@@ -1,38 +1,26 @@
-import { Image } from '#/modules/image/entities/image.entity';
-import { Role } from '#/modules/role/entities/role.entity';
+import { User } from '#/modules/user/entities/user.entity';
 import {
   Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
-  ManyToOne,
+  JoinColumn,
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
 @Entity()
-export class User {
+export class Image {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'varchar', length: 60 })
-  name: string;
-
-  @Column({ type: 'varchar', length: 60, unique: true })
-  email: string;
-
   @Column({ type: 'text' })
-  password: string;
+  filename: string;
 
-  @Column({ type: 'boolean', default: true })
-  status: boolean;
-
-  @ManyToOne(() => Role, (role) => role.users)
-  role: Role;
-
-  @OneToOne(() => Image, (image) => image.user, { cascade: true })
-  image: Image;
+  @OneToOne(() => User, (user) => user.image, { nullable: true })
+  @JoinColumn({ name: 'user_id' })
+  user: User;
 
   @CreateDateColumn({
     type: 'timestamp with time zone',
