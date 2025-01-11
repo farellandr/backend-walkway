@@ -17,7 +17,7 @@ async function bootstrap() {
   app.use(CorrelationIdMiddleware());
   app.useLogger(logger);
   app.enableCors();
-  app.useGlobalFilters(new ExceptionsFilter());
+  // app.useGlobalFilters(new ExceptionsFilter());
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,

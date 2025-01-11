@@ -1,37 +1,32 @@
-import { Brand } from '#/modules/brand/entities/brand.entity';
+import { Image } from '#/modules/image/entities/image.entity';
 import { Product } from '#/modules/product/entities/product.entity';
-import { User } from '#/modules/user/entities/user.entity';
 import {
   Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
-  JoinColumn,
-  ManyToOne,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
 @Entity()
-export class Image {
+export class Brand {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'text' })
-  filename: string;
+  @Column({ type: 'varchar', length: 60 })
+  name: string;
 
-  @OneToOne(() => User, (user) => user.image, { nullable: true })
-  @JoinColumn({ name: 'user_id' })
-  user: User;
+  @OneToOne(() => Image, (image) => image.brand, { cascade: true })
+  image: Image;
 
-  @OneToOne(() => Brand, (brand) => brand.image, { nullable: true })
-  @JoinColumn({ name: 'brand_id' })
-  brand: Brand;
+  @Column({ type: 'boolean', default: true })
+  status: boolean;
 
-  @ManyToOne(() => Product, (product) => product.images, { nullable: true })
-  @JoinColumn({ name: 'product_id' })
-  product: Product;
+  @OneToMany(() => Product, (product) => product.brand)
+  products: Product[];
 
   @CreateDateColumn({
     type: 'timestamp with time zone',

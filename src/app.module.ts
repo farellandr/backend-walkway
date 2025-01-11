@@ -12,6 +12,9 @@ import { RoleModule } from './modules/role/role.module';
 import { UserModule } from './modules/user/user.module';
 import { SeedersModule } from './seeders/seeders.module';
 import { ImageModule } from './modules/image/image.module';
+import { BrandModule } from './modules/brand/brand.module';
+import { CategoryModule } from './modules/category/category.module';
+import { ProductModule } from './modules/product/product.module';
 
 @Module({
   imports: [
@@ -102,6 +105,9 @@ import { ImageModule } from './modules/image/image.module';
     UserModule,
     SeedersModule,
     ImageModule,
+    BrandModule,
+    CategoryModule,
+    ProductModule,
   ],
 })
 export class AppModule {}
