@@ -40,7 +40,7 @@ export class BrandController {
     return {
       data: await this.brandService.findOne(id),
       statusCode: HttpStatus.OK,
-      message: 'Brand fetchede successfully',
+      message: 'Brand fetched successfully',
     };
   }
 
