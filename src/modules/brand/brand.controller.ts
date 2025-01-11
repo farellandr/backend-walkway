@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpStatus,
   Param,
   ParseUUIDPipe,
   Patch,
@@ -17,30 +18,49 @@ export class BrandController {
   constructor(private readonly brandService: BrandService) {}
 
   @Post()
-  create(@Body() createBrandDto: CreateBrandDto) {
-    return this.brandService.create(createBrandDto);
+  async create(@Body() createBrandDto: CreateBrandDto) {
+    return {
+      data: await this.brandService.create(createBrandDto),
+      statusCode: HttpStatus.CREATED,
+      message: 'Brand created successfully',
+    };
   }
 
   @Get()
-  findAll() {
-    return this.brandService.findAll();
+  async findAll() {
+    return {
+      data: await this.brandService.findAll(),
+      statusCode: HttpStatus.OK,
+      message: 'Brands fetched successfully',
+    };
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.brandService.findOne(id);
+  async findOne(@Param('id', ParseUUIDPipe) id: string) {
+    return {
+      data: await this.brandService.findOne(id),
+      statusCode: HttpStatus.OK,
+      message: 'Brand fetchede successfully',
+    };
   }
 
   @Patch(':id')
-  update(
+  async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateBrandDto: UpdateBrandDto,
   ) {
-    return this.brandService.update(id, updateBrandDto);
+    return {
+      data: await this.brandService.update(id, updateBrandDto),
+      statusCode: HttpStatus.OK,
+      message: 'Brand updated successfully',
+    };
   }
 
   @Delete(':id')
-  remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.brandService.remove(id);
+  async remove(@Param('id', ParseUUIDPipe) id: string) {
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Brand deleted successfully',
+    };
   }
 }
