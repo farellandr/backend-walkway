@@ -1,6 +1,7 @@
 import { Brand } from '#/modules/brand/entities/brand.entity';
 import { Category } from '#/modules/category/entities/category.entity';
 import { Image } from '#/modules/image/entities/image.entity';
+import { Size } from '#/modules/sizes/entities/size.entity';
 import {
   Column,
   CreateDateColumn,
@@ -37,6 +38,9 @@ export class Product {
 
   @OneToMany(() => Image, (image) => image.product)
   images: Image[];
+
+  @OneToMany(() => Size, (size) => size.product)
+  sizes: Size[];
 
   @CreateDateColumn({
     type: 'timestamp with time zone',

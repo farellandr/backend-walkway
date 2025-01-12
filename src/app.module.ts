@@ -1,20 +1,21 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import * as Joi from 'joi';
-import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
-import { LoggerModule } from 'nestjs-pino';
-import { HealthModule } from './health/health.module';
-import configuration from './config/configuration';
-import * as pino from 'pino';
 import { ScheduleModule } from '@nestjs/schedule';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import * as Joi from 'joi';
+import { LoggerModule } from 'nestjs-pino';
+import * as pino from 'pino';
+import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
+import configuration from './config/configuration';
+import { HealthModule } from './health/health.module';
+import { BrandModule } from './modules/brand/brand.module';
+import { CategoryModule } from './modules/category/category.module';
+import { ImageModule } from './modules/image/image.module';
+import { ProductModule } from './modules/product/product.module';
 import { RoleModule } from './modules/role/role.module';
 import { UserModule } from './modules/user/user.module';
 import { SeedersModule } from './seeders/seeders.module';
-import { ImageModule } from './modules/image/image.module';
-import { BrandModule } from './modules/brand/brand.module';
-import { CategoryModule } from './modules/category/category.module';
-import { ProductModule } from './modules/product/product.module';
+import { SizesModule } from './modules/sizes/sizes.module';
 
 @Module({
   imports: [
@@ -108,6 +109,7 @@ import { ProductModule } from './modules/product/product.module';
     BrandModule,
     CategoryModule,
     ProductModule,
+    SizesModule,
   ],
 })
 export class AppModule {}
