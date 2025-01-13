@@ -3,12 +3,12 @@ import { MulterOptions } from '@nestjs/platform-express/multer/interfaces/multer
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 
-export const uploadImageHelper = (destination: string) => {
+export const uploadImageHelper = () => {
   let path = './uploads/images/';
 
   const options: MulterOptions = {
     storage: diskStorage({
-      destination: path + destination,
+      destination: path,
       filename: (req, file, cb) => {
         const timestamp = Date.now();
         const extension = extname(file.originalname);

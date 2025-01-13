@@ -25,55 +25,60 @@ export class ProductService {
   ) {}
 
   async create(createProductDto: CreateProductDto) {
-    const brand = await this.brandRepository.findOneOrFail({
-      where: { name: createProductDto.brand },
-    });
+    try {
+      const brand = await this.brandRepository.findOneOrFail({
+        where: { name: createProductDto.brand },
+      });
 
-    const categories = await Promise.all(
-      createProductDto.categories.map(async (categoryName) => {
-        let category = await this.categoryRepository.findOne({
-          where: { name: categoryName },
-        });
-
-        if (!category) {
-          category = await this.categoryRepository.save({
-            name: categoryName,
+      const categories = await Promise.all(
+        createProductDto.categories.map(async (categoryName) => {
+          let category = await this.categoryRepository.findOne({
+            where: { name: categoryName },
           });
-        }
 
-        return category;
-      }),
-    );
+          if (!category) {
+            category = await this.categoryRepository.save({
+              name: categoryName,
+            });
+          }
 
-    const product = this.productRepository.create({
-      name: createProductDto.name,
-      price: createProductDto.price,
-      brand: brand,
-      categories: categories,
-      status: createProductDto.status,
-    });
-    await this.productRepository.save(product);
+          return category;
+        }),
+      );
 
-    const images = createProductDto.images.map((filename) => {
-      return this.imageRepository.create({
-        filename: filename,
-        product: product,
+      const product = this.productRepository.create({
+        name: createProductDto.name,
+        price: createProductDto.price,
+        brand: brand,
+        categories: categories,
+        status: createProductDto.status,
       });
-    });
-    await this.imageRepository.save(images);
+      await this.productRepository.save(product);
 
-    const sizes = createProductDto.sizes.map((size) => {
-      return this.sizeRepository.create({
-        size: size.size,
-        stock: size.stock,
-        product: product,
+      const images = createProductDto.images.map((filename) => {
+        return this.imageRepository.create({
+          filename: filename,
+          product: product,
+        });
       });
-    });
-    await this.sizeRepository.save(sizes);
+      await this.imageRepository.save(images);
 
-    return await this.productRepository.findOneOrFail({
-      where: { id: product.id },
-    });
+      const sizes = createProductDto.sizes.map((size) => {
+        return this.sizeRepository.create({
+          size: size.size,
+          stock: size.stock,
+          product: product,
+        });
+      });
+      await this.sizeRepository.save(sizes);
+
+      return await this.productRepository.findOneOrFail({
+        where: { id: product.id },
+      });
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
   }
 
   async findAll() {
