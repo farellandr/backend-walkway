@@ -3,11 +3,14 @@ import {
   Controller,
   Delete,
   Get,
+  HttpStatus,
   Param,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
+import { ProductQueryDto } from './dto/product-query.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductService } from './product.service';
 
@@ -16,27 +19,51 @@ export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
   @Post()
-  create(@Body() createProductDto: CreateProductDto) {
-    return this.productService.create(createProductDto);
+  async create(@Body() createProductDto: CreateProductDto) {
+    return {
+      data: await this.productService.create(createProductDto),
+      statusCode: HttpStatus.CREATED,
+      message: 'Product created successfully',
+    };
   }
 
   @Get()
-  findAll() {
-    return this.productService.findAll();
+  async findAll(@Query() queryDto: ProductQueryDto) {
+    return {
+      data: await this.productService.findAll(queryDto),
+      statusCode: HttpStatus.OK,
+      message: 'Products fetched successfully',
+    };
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.productService.findOne(id);
+  async findOne(@Param('id') id: string) {
+    return {
+      data: await this.productService.findOne(id),
+      statusCode: HttpStatus.OK,
+      message: 'Product fetched successfully',
+    };
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
-    return this.productService.update(id, updateProductDto);
+  async update(
+    @Param('id') id: string,
+    @Body() updateProductDto: UpdateProductDto,
+  ) {
+    return {
+      data: await this.productService.update(id, updateProductDto),
+      statusCode: HttpStatus.OK,
+      message: 'Product updated successfully',
+    };
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.productService.remove(id);
+  async remove(@Param('id') id: string) {
+    await this.productService.remove(id);
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Product deleted successfully',
+    };
   }
 }

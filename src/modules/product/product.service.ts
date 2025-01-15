@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { ILike, Repository } from 'typeorm';
 import { Brand } from '../brand/entities/brand.entity';
 import { Category } from '../category/entities/category.entity';
 import { Image } from '../image/entities/image.entity';
 import { Size } from '../sizes/entities/size.entity';
 import { CreateProductDto } from './dto/create-product.dto';
+import { ProductQueryDto } from './dto/product-query.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { Product } from './entities/product.entity';
 
@@ -81,8 +82,13 @@ export class ProductService {
     }
   }
 
-  async findAll() {
+  async findAll(queryDto: ProductQueryDto) {
+    const searchClause = queryDto.search
+      ? { name: ILike(`%${queryDto.search}%`) }
+      : {};
+
     return await this.productRepository.find({
+      where: { ...searchClause },
       relations: ['brand.image', 'categories', 'images'],
     });
   }

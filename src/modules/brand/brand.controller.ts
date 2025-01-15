@@ -58,6 +58,8 @@ export class BrandController {
 
   @Delete(':id')
   async remove(@Param('id', ParseUUIDPipe) id: string) {
+    await this.brandService.remove(id);
+
     return {
       statusCode: HttpStatus.OK,
       message: 'Brand deleted successfully',
