@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ILike, Repository } from 'typeorm';
+import { ILike, In, Repository } from 'typeorm';
 import { Brand } from '../brand/entities/brand.entity';
 import { Category } from '../category/entities/category.entity';
 import { Image } from '../image/entities/image.entity';
@@ -90,6 +90,36 @@ export class ProductService {
     return await this.productRepository.find({
       where: { ...searchClause },
       relations: ['brand.image', 'categories', 'images'],
+    });
+  }
+
+  async findCartItem(ids: { ids: string[] }) {
+    const sizes = await this.sizeRepository.find({
+      where: { id: In(ids.ids) },
+      relations: ['product'],
+    });
+
+    const productsWithSizes = sizes.map((size) => ({
+      ...size.product,
+      size: size,
+    }));
+
+    const productIds = sizes.map((size) => size.product.id);
+    const products = await this.productRepository.find({
+      where: { id: In(productIds) },
+      relations: ['brand', 'categories', 'images'],
+    });
+
+    return productsWithSizes.map((productWithSize) => ({
+      ...products.find(product => product.id === productWithSize.id),
+      size: productWithSize.size,
+    }));
+  }
+
+  async findWishlistItem(ids: { ids: string[] }) {
+    return await this.productRepository.find({
+      where: { id: In(ids.ids) },
+      relations: ['brand', 'images'],
     });
   }
 

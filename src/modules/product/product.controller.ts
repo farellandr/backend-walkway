@@ -27,6 +27,24 @@ export class ProductController {
     };
   }
 
+  @Post('/cart')
+  async findCartItem(@Body() ids: { ids: string[] }) {
+    return {
+      data: await this.productService.findCartItem(ids),
+      statusCode: HttpStatus.CREATED,
+      message: 'Product created successfully',
+    };
+  }
+
+  @Post('/wishlist')
+  async findWishlistItem(@Body() ids: { ids: string[] }) {
+    return {
+      data: await this.productService.findCartItem(ids),
+      statusCode: HttpStatus.CREATED,
+      message: 'Product created successfully',
+    };
+  }
+
   @Get()
   async findAll(@Query() queryDto: ProductQueryDto) {
     return {
